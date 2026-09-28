@@ -339,6 +339,20 @@ process.stdin.setEncoding("utf8").on("data", (d) => (diff += d)).on("end", () =>
   fi
   printf '## Reviewer focus for these files (%s)\n\n%s\n\n' "$config_note" "${focus:-none}"
   printf '## Defects this repository already shipped: check these first\n\n%s\n\n' "$precedents"
+  # Set by debate.sh --since: the findings and rulings of this branch's
+  # earlier rounds, so a later round does not undo what the judge asked.
+  if [ -n "${OBJECTION_PRIOR_ROUNDS:-}" ] && [ -s "$OBJECTION_PRIOR_ROUNDS" ]; then
+    printf '## Already ruled in earlier rounds of this branch\n\n'
+    printf 'The judge ruled on these findings before this diff; the diff may be\n'
+    printf 'the fix a ruling asked for. Do not accuse the fix for doing what a\n'
+    printf 'ruling asked, and do not raise a settled point again, unless you cite\n'
+    printf 'code that shows the ruling was wrong: then name the round and the\n'
+    printf 'finding you contradict. A regression the fix introduced is still a\n'
+    printf 'finding. On wording (translations, labels), prefer a finding that\n'
+    printf 'ends the back and forth, such as neutral wording, to reversing it.\n\n'
+    cat "$OBJECTION_PRIOR_ROUNDS"
+    printf '\n'
+  fi
   printf '## Diff\n\nEach line of a hunk starts with its line number in the new file (blank for a removed line), then the diff line: cite file:line with that number.\n\n```\n'
   if [ "$total" -gt "$MAX_DIFF_LINES" ]; then
     printf '%s\n' "$numbered" | head -n "$MAX_DIFF_LINES"

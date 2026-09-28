@@ -143,9 +143,40 @@ case "$here_c/" in
 esac
 
 diff_base="origin/$base"
+# Only this script sets it, and only for a later round.
+unset OBJECTION_PRIOR_ROUNDS
 if [ -n "$since" ]; then
   diff_base="$since"
   goal="Round after a fix: hunt regressions from the fix first. Goal of the PR: $goal"
+  # What the judge already ruled in this branch's earlier rounds, oldest
+  # first, for brief.sh to show the reviewers. Without it a later accuser
+  # sees only the fix, and can accuse it for doing what a ruling asked:
+  # measured on an adopter's PR, round 1 condemned a Spanish label as
+  # "Siempre activas", round 2 condemned the fix "Siempre activo".
+  # Only judged records count (a draft's Judge is still a TODO); every
+  # cell and ruling is cut short, and the whole to 150 lines.
+  prior_dir="$(cd "$(git rev-parse --git-common-dir)" && pwd)/objection"
+  prior="$tmp/prior-rounds"
+  : >"$prior"
+  head_sha=$(git rev-parse HEAD)
+  for c in $(git rev-list --reverse "origin/$base..HEAD" 2>/dev/null); do
+    [ "$c" = "$head_sha" ] && continue
+    f="$prior_dir/$c.md"
+    [ -f "$f" ] || f="$prior_dir/record-$c.md"
+    [ -f "$f" ] || continue
+    grep -q 'TODO(judge)' "$f" && continue
+    awk -v c="${c:0:7}" '
+      function cut(s, n) { return length(s) > n ? substr(s, 1, n) "..." : s }
+      BEGIN { printf "### Round at %s\n\n", c }
+      /^## / { sec = $0; next }
+      sec == "## Accusation" && /^\| *[0-9]+ *\|/ { print cut($0, 400); next }
+      sec == "## Judge" && NF { if (!j++) print "\nRulings:"; print cut($0, 600) }
+      END { print "" }' "$f" >>"$prior"
+  done
+  if [ -s "$prior" ]; then
+    head -n 150 "$prior" >"$prior.cut" && mv "$prior.cut" "$prior"
+    export OBJECTION_PRIOR_ROUNDS="$prior"
+  fi
 fi
 brief=$(bash "$here/brief.sh" "$diff_base" "$goal" "$scope" "origin/$base")
 # Markers are read from the header only: brief.sh writes them above its
