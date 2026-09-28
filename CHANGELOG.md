@@ -4,9 +4,10 @@
 
 - **A later round sees what the judge already ruled.** `debate.sh
   --since` puts the findings and rulings of the branch's earlier judged
-  rounds in the brief, and the reviewers are told not to accuse the fix
-  for doing what a ruling asked, unless they cite code that shows the
-  ruling was wrong. Before, round 2 saw only the fix: on an adopter's PR,
+  rounds in the brief (newest first), and asks the reviewers not to
+  accuse the fix for doing what a ruling asked, unless they cite code
+  that shows the ruling was wrong. A request to the model, not a filter:
+  the judge still rules on a finding that reverses one. Before, round 2 saw only the fix: on an adopter's PR,
   round 1 condemned a Spanish label as "Siempre activas" and round 2
   condemned the fix, "Siempre activo". Wording can still vary between
   runs; the brief asks for a finding that ends the back and forth
