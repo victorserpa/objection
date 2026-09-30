@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- The gate no longer reads a redirection as the PR number ("could not
+  read the head SHA of PR 2>"), and `2>&1` or `&>` no longer ends the
+  command: a merge with `2>&1` before the number had the gate check the
+  current branch's PR while gh merged the numbered one. From an
+  adopter's hook log.
 - A record heading edited by hand (`## Accusation (round 2)`) now fails
   with a message that names it and says to regenerate the body with
   `pr-body.sh --update`, in the CI check and in `stamp.sh`. Before, the

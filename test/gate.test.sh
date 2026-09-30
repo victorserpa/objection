@@ -531,6 +531,15 @@ check 2 $O Bash 'gh pr ready `cat .pr`'
 check 2 $O Bash 'gh pr merge $((40+2))'
 check 2 $O Bash 'gh pr merge "$PR" --squash'
 check 2 $O Bash 'gh pr merge $PR'
+# A redirection is not the PR number: it names the number after it, or
+# none (the current branch's PR).
+STUB_WANT="7" check 0 $O Bash 'gh pr merge 2>/dev/null 7'; called "7"
+STUB_WANT="7" check 0 $O Bash 'gh pr merge 2> err.log 7 --squash'; called "7"
+STUB_WANT="7" check 0 $O Bash 'gh pr merge >out.txt 2>&1 7'; called "7"
+STUB_WANT="7" check 0 $O Bash 'gh pr merge &>/dev/null 7'; called "7"
+# "2>&1" used to end the command at "&": the gate then checked the current
+# branch's PR while gh merged 7. Without a record for 7 it blocks.
+check 2 $N Bash 'gh pr merge 2>&1 7'
 # ...while a literal number with a substitution elsewhere still works.
 STUB_WANT="7" check 0 $O Bash 'gh pr merge 7 -t "$(cd sub && git log -1 --format=%s)"'; called "7"
 STUB_WANT="7" check 0 $O Bash 'gh pr merge 7 -t $(cd sub && git log -1 --format=%s)'; called "7"
