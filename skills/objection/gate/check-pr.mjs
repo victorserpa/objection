@@ -30,7 +30,10 @@ import { missingRulings } from "./rulings.mjs";
 const gitlab = !!process.env.GITLAB_CI;
 
 function fail(msg) {
-  if (!gitlab) console.log(`::error title=objection::${msg}`);
+  // Escaped as the Actions docs ask: a message can quote the PR body, and
+  // a raw newline there would start a workflow command of its own.
+  const esc = msg.replace(/%/g, "%25").replace(/\r/g, "%0D").replace(/\n/g, "%0A");
+  if (!gitlab) console.log(`::error title=objection::${esc}`);
   console.error(`objection: ${msg}`);
   process.exit(1);
 }
@@ -214,7 +217,7 @@ if (!docsOnly) {
     const near = lines.find((l) => l.trimEnd().toLowerCase().startsWith(section.toLowerCase()));
     fail(
       near
-        ? `the record has "${near.trim()}" where the heading must be exactly "${section}". Do not edit the record in the PR body by hand: regenerate the body with pr-body.sh --update.`
+        ? `the record has ${JSON.stringify(near)} where the heading must be exactly "${section}". Do not edit the record in the PR body by hand: regenerate the body with pr-body.sh --update.`
         : `the record is missing the section "${section}". Put the record in the PR body with pr-body.sh (--update for an open PR), not by hand.`,
     );
   }

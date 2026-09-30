@@ -65,6 +65,15 @@ case "$msg" in
   *'"## Accusation (round 2)" where the heading must be exactly "## Accusation"'*'pr-body.sh --update'*) ;;
   *) echo "FAIL: the message does not name the edited heading: $msg"; failures=$((failures + 1)) ;;
 esac
+# A trailing space shows in the message; a %, CR or LF from the body is
+# escaped in the Actions annotation.
+body="$(record $HEAD origin/main nothing APPROVED | sed 's/^## Accusation$/## Accusation %0Ax /')"
+node -e 'require("fs").writeFileSync(process.argv[1], JSON.stringify({pull_request:{number:1,head:{sha:process.argv[2]},base:{ref:"main"},body:process.argv[3]},repository:{full_name:"o/r"}}))' "$T/event.json" "$HEAD" "$body"
+msg=$(GITHUB_EVENT_PATH="$T/event.json" OBJECTION_FILES="$CODE" node "$CHECK" 2>/dev/null)
+case "$msg" in
+  *'"## Accusation %250Ax "'*) ;;
+  *) echo "FAIL: the message does not name the edited heading: $msg"; failures=$((failures + 1)) ;;
+esac
 # The last stamp wins: an old approved record below a new rejected one.
 run 1 "$CODE" "$(record $OLD origin/main nothing APPROVED)
 $(record $HEAD origin/main nothing REJECTED)"

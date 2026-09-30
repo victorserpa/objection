@@ -413,7 +413,7 @@ git -C "$R" update-ref refs/remotes/origin/develop HEAD~3
 full nothing
 sed -i.bak 's/^## Accusation$/## Accusation (round 2)/' "$T/rec.md" && rm -f "$T/rec.md.bak"
 msg=$(cd "$R" && bash "$STAMP" "$T/rec.md" origin/develop 2>&1) && { echo "FAIL: stamp.sh took an edited heading"; failures=$((failures + 1)); }
-case "$msg" in *"'## Accusation (round 2)' where the heading must be exactly '## Accusation'"*) ;;
+case "$msg" in *"'## Accusation (round 2)' (quoted as is: trailing spaces count) where the heading must be exactly '## Accusation'"*) ;;
   *) echo "FAIL: stamp.sh does not name the edited heading: $msg"; failures=$((failures + 1)) ;; esac
 git -C "$R" update-ref refs/remotes/origin/develop HEAD~1
 # Repository not opted in: stamp.sh refuses.

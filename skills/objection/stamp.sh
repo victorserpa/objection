@@ -99,7 +99,7 @@ if [ "$docs_only" = no ]; then
     grep -qx "$section" "$record" && continue
     near=$(grep -i -m 1 "^$section" "$record" || true)
     if [ -n "$near" ]; then
-      echo "the record has '$near' where the heading must be exactly '$section' (the CI check reads it the same way)." >&2
+      echo "the record has '$near' (quoted as is: trailing spaces count) where the heading must be exactly '$section' (the CI check reads it the same way)." >&2
     else
       echo "missing section '$section' in the record." >&2
     fi
