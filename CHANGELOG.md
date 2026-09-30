@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- A record heading edited by hand (`## Accusation (round 2)`) now fails
+  with a message that names it and says to regenerate the body with
+  `pr-body.sh --update`, in the CI check and in `stamp.sh`. Before, the
+  check said only "missing the section", and an adopter read it as a
+  broken gate and removed the workflow.
+
 ## 0.23.1 (2026-09-28)
 
 - **A later round sees what the judge already ruled.** `debate.sh

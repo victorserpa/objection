@@ -55,6 +55,16 @@ run 1 "$CODE" "$(record $HEAD origin/main '- HIGH: race on retry' APPROVED)"
 run 1 "$CODE" "$(record $HEAD origin/main '1. **Blocker** data loss' APPROVED)"
 run 0 "$CODE" "$(record $HEAD origin/main '- MEDIUM: falta teste' APPROVED)"
 run 0 "$CODE" "$(record $HEAD origin/main 'no HIGH finding is left' APPROVED)"
+# A heading edited by hand ("## Accusation (round 2)") fails, and the
+# message names it and says to regenerate the body instead.
+body="$(record $HEAD origin/main nothing APPROVED | sed 's/^## Accusation$/## Accusation (round 2)/')"
+run 1 "$CODE" "$body"
+node -e 'require("fs").writeFileSync(process.argv[1], JSON.stringify({pull_request:{number:1,head:{sha:process.argv[2]},base:{ref:"main"},body:process.argv[3]},repository:{full_name:"o/r"}}))' "$T/event.json" "$HEAD" "$body"
+msg=$(GITHUB_EVENT_PATH="$T/event.json" OBJECTION_FILES="$CODE" node "$CHECK" 2>&1)
+case "$msg" in
+  *'"## Accusation (round 2)" where the heading must be exactly "## Accusation"'*'pr-body.sh --update'*) ;;
+  *) echo "FAIL: the message does not name the edited heading: $msg"; failures=$((failures + 1)) ;;
+esac
 # The last stamp wins: an old approved record below a new rejected one.
 run 1 "$CODE" "$(record $OLD origin/main nothing APPROVED)
 $(record $HEAD origin/main nothing REJECTED)"

@@ -408,6 +408,14 @@ full '- MEDIUM: x'
 (cd "$R/deep/er" && bash "$STAMP" "$T/rec.md" origin/develop >/dev/null 2>&1) || { echo "FAIL: stamp.sh from a subdirectory"; failures=$((failures + 1)); }
 [ -f "$R/.git/objection/$(git -C "$R" rev-parse HEAD).md" ] || { echo "FAIL: stamp.sh from a subdirectory wrote elsewhere"; failures=$((failures + 1)); }
 [ -e "$R/deep/er/.git" ] && { echo "FAIL: stamp.sh created a .git in the subdirectory"; failures=$((failures + 1)); }
+# A heading edited by hand is refused, and the message names it.
+git -C "$R" update-ref refs/remotes/origin/develop HEAD~3
+full nothing
+sed -i.bak 's/^## Accusation$/## Accusation (round 2)/' "$T/rec.md" && rm -f "$T/rec.md.bak"
+msg=$(cd "$R" && bash "$STAMP" "$T/rec.md" origin/develop 2>&1) && { echo "FAIL: stamp.sh took an edited heading"; failures=$((failures + 1)); }
+case "$msg" in *"'## Accusation (round 2)' where the heading must be exactly '## Accusation'"*) ;;
+  *) echo "FAIL: stamp.sh does not name the edited heading: $msg"; failures=$((failures + 1)) ;; esac
+git -C "$R" update-ref refs/remotes/origin/develop HEAD~1
 # Repository not opted in: stamp.sh refuses.
 (cd "$F" && bash "$STAMP" "$T/rec.md" origin/main >/dev/null 2>&1) && { echo "FAIL: stamp.sh ran without objection.json"; failures=$((failures + 1)); }
 
