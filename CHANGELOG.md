@@ -5,8 +5,9 @@
 - The accuser's prompt defines each severity by impact and says how
   sure it is goes in the evidence, not in the severity. Measured, it
   helped little: on 15 real bugs, 26 of 60 at the right severity
-  against 25 before; Redis's crash went from MEDIUM every time to HIGH;
-  no false alarm on the clean cases.
+  against 25 before, and still below a plain prompt (33); Redis's
+  crash went from MEDIUM every time to HIGH; no false alarm on the
+  clean cases.
 - A later round's brief lists the files the branch itself added (not on
   the base branch), and says that editing, renaming or renumbering one
   changes nothing the base shipped. An adopter's reviewers raised five
