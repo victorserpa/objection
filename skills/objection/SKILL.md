@@ -72,7 +72,7 @@ bash <this skill's directory>/debate.sh "<goal in one sentence>" "<scope, if the
 The base is the config's `defaultBase`; name another first
 (`debate.sh <base> "<goal>"`). Later rounds review only the fix:
 `debate.sh --since <previous-round-sha> "<goal>"`. It builds the brief
-(the diff with numbered lines, the invariants, reviewer focus and
+(the diff first, then the invariants, reviewer focus and
 precedents that cover it), runs the accusers and, for the findings the
 budget sends, the defender, each as an isolated process with no tools,
 and writes a draft record whose Judge and Open sections say `TODO(judge)`.

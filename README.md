@@ -100,8 +100,9 @@ ESLint and curl, five runs each on 0.20.0 ([raw output](eval/results/2026-09-25.
 Sonnet meets both v1.0 bars (90% caught, at most 10% false alarms);
 Gemini catches more but alarms more, over the 10% bar. On 15 more
 real regressions (hand-graded, [results](eval/results/2026-10-01-real-bugs.md)),
-sonnet found 55% and rated 42% right, **below a plain review prompt on
-the same model** (62% and 55%); over all 24 real bugs the two are even. 24 real bugs
+sonnet rated 42% right, **below a plain review prompt on the same model**
+(55%); with the diff moved to the top of the brief it rates 48% right,
+still with no false alarm on the clean cases. 24 real bugs
 are a small sample, and no number here says it catches everything. Scoring, every case and the history: [docs/eval.md](docs/eval.md).
 
 ## How it works

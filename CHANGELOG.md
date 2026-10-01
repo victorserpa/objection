@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+- The brief puts the diff first, right after the reading rules, and the
+  context (invariants, precedents, definitions) after it; the diff
+  keeps its line numbers. Before, the diff came last. On the 15 real
+  bugs, hand-graded, 29 of 60 at the right severity against 26 before
+  (a plain prompt: 33), and no false alarm on the clean cases. Without
+  the line numbers it read 31, but 7 of 27 planted bugs were cited 1 or
+  2 lines off; with them, 1 of 26 (a one-line migration cited on its
+  comment line).
+
 ## 0.23.2 (2026-10-01)
 
 - The accuser's prompt defines each severity by impact and says how

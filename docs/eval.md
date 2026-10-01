@@ -188,6 +188,10 @@ a plain prompt does not is the defender, the judge, the gate and the
 record, not a better first read of the diff; five of the fifteen nobody
 found at all.
 
+Moving the diff to the top of the brief, with the context after it,
+closed part of the gap: 29 of 60 at the right severity (from 26 with
+the severity rubric), no false alarm on the clean cases. Details in the [results](../eval/results/2026-10-01-real-bugs.md).
+
 ## Track record
 
 objection reviews its own pull requests, and every record is public in

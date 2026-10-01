@@ -173,6 +173,9 @@ grep -qx '   12  12' "$out" || { echo "FAIL: the brief lost the third line of co
 # Each hunk line carries its new-file line number; a removed line none.
 grep -qx '   15 +fifteen' "$out" || { echo "FAIL: an added line is not numbered by the new file"; failures=$((failures + 1)); }
 grep -qx '      -15' "$out" || { echo "FAIL: a removed line got a number"; failures=$((failures + 1)); }
+# The diff comes before the context.
+d=$(grep -n '^## Diff$' "$out" | cut -d: -f1); z=$(grep -n '^## Size$' "$out" | cut -d: -f1)
+[ -n "$d" ] && [ -n "$z" ] && [ "$d" -lt "$z" ] || { echo "FAIL: the diff does not come before the context"; failures=$((failures + 1)); }
 # Header lines that repeat the file name are dropped; a new file keeps
 # its /dev/null side, which says it is new.
 grep -q '^index [0-9a-f]' "$out" && { echo "FAIL: the brief kept an index line"; failures=$((failures + 1)); }
