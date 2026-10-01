@@ -76,6 +76,8 @@ printf 'a\n' >"$X/one/base/src/a.js" && printf 'b\n' >"$X/one/change/src/a.js"
 printf '{"goal":"g","severity":"HIGH","match":"zzz","file":"src/a.js","lines":[1]}\n' >"$X/one/expect.json"
 line=$(EVAL_FIXTURES="$X" FAKE_ROW="| HIGH | BUG | src/a.js:1 | x | read | p |" bash "$ROOT/eval/run.sh" one 2>/dev/null | awk '$1 == "one"')
 case "$line" in *CAUGHT*) ;; *) fail "EVAL_FIXTURES was not used ($line)" ;; esac
+# ...and the run says its count is not a hand grade.
+EVAL_FIXTURES="$X" FAKE_ROW="| HIGH | BUG | src/a.js:1 | x | read | p |" bash "$ROOT/eval/run.sh" one 2>/dev/null | grep -q '^note: an automatic count' || fail "EVAL_FIXTURES runs do not say to grade by hand"
 # A shortened path counts when its directories are in the real one, in
 # order; a path with another directory does not.
 mkdir -p "$X/deep/base/pkg/src/main/x" "$X/deep/change/pkg/src/main/x"

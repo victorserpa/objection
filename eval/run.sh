@@ -203,4 +203,8 @@ esac
 [ "$total" -gt 0 ] || { echo "no fixture matched: nothing ran." >&2; exit 2; }
 [ -z "${EVAL_BASELINE:-}" ] || who="$who, BASELINE (plain prompt, raw diff)"
 echo "runner: $who; $pass of $total as expected"
+# Real bugs (EVAL_FIXTURES) are graded by hand before a number is quoted:
+# a row that cites a bug line counts even when it describes another
+# defect on that line, and the 2026-10-01 run read 6 of 60 too high.
+[ -z "${EVAL_FIXTURES:-}" ] || echo "note: an automatic count; a finding that cites a bug line counts even when it is about another defect there. Grade real bugs by hand before quoting a number (docs/eval.md)."
 [ "$pass" = "$total" ]
