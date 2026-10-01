@@ -44,6 +44,11 @@ run 0 "$CODE" "$(record $HEAD origin/main nothing APPROVED | sed 's/$/\r/')"
 DOCREC="$(printf '<!-- objection: sha=%s base=origin/main -->\nVERDICT: APPROVED\n' "$HEAD")"
 run 0 "docs/guide.md" "$DOCREC"
 run 1 "docs/conf.py" "$DOCREC"
+# A PR that changes no file (a merge bringing history in) needs only the
+# verdict, when GitHub's count proves zero; an unproven empty list does not.
+CHANGED=0 run 0 "" "$DOCREC"
+run 1 "" "$DOCREC"
+CHANGED=0 run 1 "" "no record here"
 # requirements.txt and CMakeLists.txt change the build.
 run 1 "requirements.txt" "$DOCREC"
 run 1 "CMakeLists.txt" "$DOCREC"

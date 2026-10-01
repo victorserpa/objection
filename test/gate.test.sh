@@ -329,6 +329,15 @@ stampcheck() { # expected base record
 }
 # Documentation by extension, renames under both names: a code file
 # renamed to .md, or code under docs/, needs the full record.
+# A merge that changes no file (merge -s ours bringing another branch's
+# history in) stamps with a verdict-only record: there is nothing to debate.
+R3="$T/stamp-empty"
+git init -q "$R3" && optin "$R3" && printf 'code\n' >"$R3/a.js" &&
+  gitc -C "$R3" add . && gitc -C "$R3" commit -q -m base && git -C "$R3" update-ref refs/remotes/origin/develop HEAD
+git -C "$R3" checkout -q -b other && printf 'more\n' >>"$R3/a.js" && gitc -C "$R3" commit -q -am other
+git -C "$R3" checkout -q - && gitc -C "$R3" merge -q -s ours other -m "history only"
+(cd "$R3" && bash "$STAMP" "$T/min.md" origin/develop >/dev/null 2>&1) || { echo "FAIL: a merge with no file change did not stamp"; failures=$((failures + 1)); }
+[ -f "$R3/.git/objection/$(git -C "$R3" rev-parse HEAD).md" ] || { echo "FAIL: the empty merge's record was not stored"; failures=$((failures + 1)); }
 R2="$T/stamp-docs"
 git init -q "$R2" && optin "$R2" && mkdir -p "$R2/src" && printf 'code\n' >"$R2/src/auth.js" &&
   gitc -C "$R2" add . && gitc -C "$R2" commit -q -m base && git -C "$R2" update-ref refs/remotes/origin/develop HEAD

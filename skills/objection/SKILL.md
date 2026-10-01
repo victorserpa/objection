@@ -57,6 +57,11 @@ there next to the current one. From 0.23.2 on, `debate.sh` and
    `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `.objection.json`,
    `.objection/`): no debate. The record says "documentation only" and
    goes straight to the stamp.
+5. **No file changes** (`git diff <base>...HEAD` is empty: a
+   `merge -s ours` that brings another branch's history in): no debate.
+   The record says why in one sentence, then `VERDICT: APPROVED`, and
+   goes straight to the stamp. The GitHub check accepts it when the PR
+   lists zero changed files; the GitLab check does not.
 
 ## 1. One round: debate.sh
 

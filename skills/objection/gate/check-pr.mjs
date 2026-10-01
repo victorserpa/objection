@@ -200,12 +200,19 @@ if (!gitlab && (listed >= 3000 || (Number.isInteger(pr.changed_files) && listed 
 // are a plugin convention. Same list as stamp.sh (NEVER_DOCS).
 const NEVER_DOCS =
   /(^|\/)(\.(claude|cursor|codex|gemini|github|agents|objection)\/|(AGENTS|CLAUDE|GEMINI)\.md$|\.objection\.json$)|^(agents|skills)\//;
+// A PR that changes no file (a merge that brings history in, nothing
+// else) needs only the stamp and the verdict, as stamp.sh accepts it.
+// Only when GitHub's changed_files proves the count is zero. On GitLab
+// the list is a git diff, and an empty one proves nothing (a base read
+// wrong also gives it): refused there, as before.
+const noFiles = !gitlab && files.length === 0 && pr.changed_files === 0;
 const docsOnly =
-  files.length > 0 &&
+  noFiles ||
+  (files.length > 0 &&
   // By extension only: docs/conf.py is code. Not .txt: requirements.txt and
   // CMakeLists.txt change what gets built. Renamed files count under
   // both names (changedFiles), so src/auth.js -> src/auth.md is not docs.
-  files.every((f) => !NEVER_DOCS.test(f) && /\.(md|mdx|rst|adoc)$/i.test(f));
+  files.every((f) => !NEVER_DOCS.test(f) && /\.(md|mdx|rst|adoc)$/i.test(f)));
 
 const lines = record.split("\n");
 if (!docsOnly) {
