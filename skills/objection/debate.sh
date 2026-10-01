@@ -74,7 +74,7 @@ fi
 # Physical paths: git reports the toplevel resolved (/private/var on macOS).
 here="$(cd "$(dirname "$0")" && pwd -P)"
 # An old copy from the plugin cache says so (newer-copy.sh).
-bash "$here/newer-copy.sh" || true
+[ ! -f "$here/newer-copy.sh" ] || bash "$here/newer-copy.sh" || true
 top="$(git rev-parse --show-toplevel)"
 cd "$top"
 

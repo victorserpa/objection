@@ -35,6 +35,21 @@ msg=$(bash "$T/cache/objection/9.9.9-rc/skills/objection/newer-copy.sh" 2>&1)
 ln -s "$T/cache/objection/0.9.0" "$T/cache/objection/current"
 msg=$(bash "$T/cache/objection/current/skills/objection/newer-copy.sh" 2>&1)
 case "$msg" in *"this is 0.9.0"*"0.23.1 is installed"*) ;; *) fail "the symlinked old copy did not warn: [$msg]" ;; esac
+# A directory named like a newer version but not installed (no VERSION)
+# does not hide the real newest one.
+mkdir -p "$T/cache/objection/9.9.9/skills/objection"
+msg=$(bash "$T/cache/objection/0.9.0/skills/objection/newer-copy.sh" 2>&1)
+case "$msg" in *"0.23.1 is installed"*) ;; *) fail "an empty 9.9.9 hid 0.23.1: [$msg]" ;; esac
+# A VERSION with CRLF line ends still matches its directory.
+printf '0.9.0\r\n' >"$T/cache/objection/0.9.0/skills/objection/VERSION"
+msg=$(bash "$T/cache/objection/0.9.0/skills/objection/newer-copy.sh" 2>&1)
+case "$msg" in *"this is 0.9.0"*"0.23.1 is installed"*) ;; *) fail "a CRLF VERSION did not warn: [$msg]" ;; esac
+printf '0.9.0\n' >"$T/cache/objection/0.9.0/skills/objection/VERSION"
+# A copy without newer-copy.sh runs stamp.sh with no noise from it.
+mkdir -p "$T/partial"
+cp "$ROOT/skills/objection/stamp.sh" "$T/partial/"
+msg=$(cd "$T" && bash "$T/partial/stamp.sh" 2>&1)
+case "$msg" in *newer-copy*) fail "a copy without newer-copy.sh printed: [$msg]" ;; esac
 # Outside the cache layout (this repository): nothing.
 msg=$(bash "$ROOT/skills/objection/newer-copy.sh" 2>&1)
 [ -z "$msg" ] || fail "the repository copy warned: [$msg]"
