@@ -353,6 +353,23 @@ process.stdin.setEncoding("utf8").on("data", (d) => (diff += d)).on("end", () =>
     cat "$OBJECTION_PRIOR_ROUNDS"
     printf '\n'
   fi
+  # A later round diffs against the previous round's commit, so a file the
+  # branch itself added shows up as edited, renamed or renumbered. Measured
+  # on an adopter's PRs: five BLOCKERs "a shipped migration was rewritten",
+  # all refuted, all about migrations no base branch ever had.
+  if [ "$diff_base" != "$config_base" ]; then
+    branch_new=$(printf '%s\n' "$files" | while IFS= read -r f; do
+      [ -n "$f" ] || continue
+      gitref cat-file -e "$config_base:$f" 2>/dev/null || printf -- '- %s\n' "$f"
+    done)
+    if [ -n "$branch_new" ]; then
+      printf '## Files this branch added (not on %s)\n\n' "$config_base"
+      printf 'These are not on the base branch: an earlier commit of this same\n'
+      printf 'branch added them. Editing, renaming or renumbering one changes\n'
+      printf 'nothing the base branch shipped, and a migration among them has not\n'
+      printf 'run where the base deploys. Judge them as new code.\n\n%s\n\n' "$branch_new"
+    fi
+  fi
   printf '## Diff\n\nEach line of a hunk starts with its line number in the new file (blank for a removed line), then the diff line: cite file:line with that number.\n\n```\n'
   if [ "$total" -gt "$MAX_DIFF_LINES" ]; then
     printf '%s\n' "$numbered" | head -n "$MAX_DIFF_LINES"

@@ -36,6 +36,23 @@ git add . && gitc commit -q -m "drop invariants on the branch"
 out=$(bash "$BRIEF" origin/main)
 has "$out" "undo never restores a spent life"
 
+# A later round names the files the branch itself added: a migration the
+# branch added in round 1 and renames in round 2 shipped nowhere.
+mkdir -p db/migrations && printf 'create\n' >db/migrations/0041_a.sql
+git add . && gitc commit -q -m "round 1 adds a migration"
+prev=$(git rev-parse HEAD)
+git mv db/migrations/0041_a.sql db/migrations/0042_a.sql && printf 'more\n' >>src/game/undo.ts
+git add . && gitc commit -q -m "round 2 renumbers it"
+out=$(bash "$BRIEF" "$prev" "g" "s" origin/main)
+has "$out" "## Files this branch added (not on origin/main)"
+has "$out" "- db/migrations/0042_a.sql"
+has "$out" "a migration among them has not"
+# A file the base has is not listed; round 1 gets no such section.
+sed -n '/^## Files this branch added/,/^## /p' "$out" >"$T/added"
+hasnt "$T/added" "src/game/undo.ts"
+out=$(bash "$BRIEF" origin/main)
+hasnt "$out" "## Files this branch added"
+
 # A base without config (the opt-in PR) falls back to the working copy.
 git init -q "$T/fresh" && cd "$T/fresh" && gitc commit -q --allow-empty -m base
 git update-ref refs/remotes/origin/main HEAD
