@@ -547,12 +547,12 @@ export function gate(input) {
     // `gh` in any command position (start, after ; & | ( $( backtick, `time`,
     // `command`, VAR=x, absolute path), with -R/--repo before or after `pr`.
     const reGh =
-      /(?:^|[\s;&|(`])(?:\S*\/)?gh((?:\s+(?:-R\s*=?|--repo(?:\s+|=))\S+)*)\s+pr((?:\s+(?:-R\s*=?|--repo(?:\s+|=))\S+)*)\s+(create|new|ready|merge)\b((?:[^;&|\n)]|(?<=[<>])&|&(?=>))*)/g;
+      /(?:^|[\s;&|(`])(?:\S*\/)?gh((?:\s+(?:-R\s*=?|--repo(?:\s+|=))\S+)*)\s+pr((?:\s+(?:-R\s*=?|--repo(?:\s+|=))\S+)*)\s+(create|new|ready|merge)\b((?:[^;&|\n)]|(?<=[<>])&|&(?=>)|(?<=>)\|)*)/g;
 
     const matches = [...active.matchAll(reGh)];
     // GitLab: `glab mr create|new|merge`, with -R/--repo before or after `mr`.
     const reGlab =
-      /(?:^|[\s;&|(`])(?:\S*\/)?glab((?:\s+(?:-R\s*=?|--repo(?:\s+|=))\S+)*)\s+mr((?:\s+(?:-R\s*=?|--repo(?:\s+|=))\S+)*)\s+(create|new|merge|update)\b((?:[^;&|\n)]|(?<=[<>])&|&(?=>))*)/g;
+      /(?:^|[\s;&|(`])(?:\S*\/)?glab((?:\s+(?:-R\s*=?|--repo(?:\s+|=))\S+)*)\s+mr((?:\s+(?:-R\s*=?|--repo(?:\s+|=))\S+)*)\s+(create|new|merge|update)\b((?:[^;&|\n)]|(?<=[<>])&|&(?=>)|(?<=>)\|)*)/g;
     const glabMatches = [...active.matchAll(reGlab)];
     if (matches.length === 0 && glabMatches.length === 0) return ALLOW;
 
@@ -606,12 +606,12 @@ export function gate(input) {
         // A redirection is the shell's, not gh's: `gh pr merge 2>/dev/null`
         // read "2>/dev/null" (or "2>" once cut at "&") as the PR number,
         // measured on an adopter's hook. An operator alone ("2>", ">")
-        // also takes the next token, its target.
-        if (/^(\d*|&)?(>>?|<)$/.test(t)) {
+        // also takes the next token, its target (">& 2", "<< EOF", ">| f").
+        if (/^(\d*|&)?(>>?|<<?<?)[&|]?$/.test(t)) {
           k++;
           continue;
         }
-        if (/^(\d*|&)?(>>?|<)/.test(t)) continue;
+        if (/^(\d*|&)?(>>?|<<?<?)/.test(t)) continue;
         // A PR number the gate cannot read (a variable, a substitution, a
         // quoted value): skipping it would check the current branch's PR
         // while another one gets merged (round 4). Say so instead.
