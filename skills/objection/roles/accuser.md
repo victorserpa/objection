@@ -31,6 +31,13 @@ check each one against the diff: a violation is a BLOCKER of kind
 INVARIANT. If it states what the change may touch, anything outside that
 is a finding of kind SCOPE, even when the code is right.
 
+**Severity is the impact if the finding is true**, not how sure you are:
+BLOCKER loses or corrupts data, opens a security hole, or crashes a
+common path; HIGH gives wrong behavior on a path users take in normal
+use (a feature that stops working counts here); MEDIUM is wrong behavior
+on an edge case; LOW is the rest. How sure you are goes in the evidence
+column: do not lower a severity because you only read the code.
+
 **Each finding needs:** severity (BLOCKER, HIGH, MEDIUM, LOW), kind (BUG,
 REGRESSION, SCOPE, INVARIANT),
 `file:line`, one sentence, and **how to prove it**: the test that would
@@ -40,7 +47,7 @@ Say what the finding rests on, weakest to strongest: `read` (you read
 the code), `static` (a checker or type error), `test` (an existing test
 fails), `new-test` (a test you wrote fails), `reproduced` (you ran it
 and saw it). Raise it when it is cheap to: a BLOCKER or HIGH on `read`
-alone gets disputed.
+alone gets disputed, but keep its severity; the defender checks it.
 
 **No quota.** Do not pad to reach a number: an invented finding costs a
 rework cycle just like a missed one. Say what you could NOT evaluate
