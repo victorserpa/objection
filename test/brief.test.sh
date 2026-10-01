@@ -52,6 +52,12 @@ sed -n '/^## Files this branch added/,/^## /p' "$out" >"$T/added"
 hasnt "$T/added" "src/game/undo.ts"
 out=$(bash "$BRIEF" origin/main)
 hasnt "$out" "## Files this branch added"
+# A base whose objects are missing (a shallow clone) lists nothing rather
+# than every file: the ref resolves to a commit this repository lacks.
+git update-ref refs/remotes/origin/ghost 1111111111111111111111111111111111111111 2>/dev/null ||
+  printf '1111111111111111111111111111111111111111\n' >.git/refs/remotes/origin/ghost
+out=$(bash "$BRIEF" "$prev" "g" "s" origin/ghost 2>/dev/null) && hasnt "$out" "## Files this branch added"
+rm -f .git/refs/remotes/origin/ghost
 
 # A base without config (the opt-in PR) falls back to the working copy.
 git init -q "$T/fresh" && cd "$T/fresh" && gitc commit -q --allow-empty -m base

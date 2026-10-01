@@ -357,7 +357,10 @@ process.stdin.setEncoding("utf8").on("data", (d) => (diff += d)).on("end", () =>
   # branch itself added shows up as edited, renamed or renumbered. Measured
   # on an adopter's PRs: five BLOCKERs "a shipped migration was rewritten",
   # all refuted, all about migrations no base branch ever had.
-  if [ "$diff_base" != "$config_base" ]; then
+  # The base's tree must be readable: in a shallow clone the ref can
+  # resolve (checked above) while its objects are missing, and every
+  # file would then read as new. Without it the section is left out.
+  if [ "$diff_base" != "$config_base" ] && gitref cat-file -e "$config_base^{tree}" 2>/dev/null; then
     branch_new=$(printf '%s\n' "$files" | while IFS= read -r f; do
       [ -n "$f" ] || continue
       gitref cat-file -e "$config_base:$f" 2>/dev/null || printf -- '- %s\n' "$f"
