@@ -1,7 +1,7 @@
 {
   "name": "objection",
   "description": "Adversarial review before every PR: an accuser attacks the diff, a defender refutes with file:line, your session judges, and a hook blocks gh pr create, ready and merge until the record is APPROVED. Opt-in per repository.",
-  "version": "0.23.1",
+  "version": "0.23.2",
   "author": {
     "name": "Victor Serpa",
     "url": "https://github.com/victorserpa"

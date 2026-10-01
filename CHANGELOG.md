@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.23.2 (2026-10-01)
 
 - The accuser's prompt defines each severity by impact and says how
   sure it is goes in the evidence, not in the severity. Measured, it
