@@ -24,6 +24,7 @@ skills/objection/            the skill, self-contained
   gate/core.mjs              gate logic, tool-neutral
   gate/hook.mjs              local hook for Claude Code, Codex, Gemini CLI, Cursor
   open-issue.sh              one issue for what a record left open
+  newer-copy.sh              warns when an old cached copy runs next to a newer one
   gate/hook.sh               runs hook.mjs; blocks a PR command when node cannot run
   gate/check-pr.mjs          GitHub check
   templates/                 hook configs per tool + the GitHub and GitLab CI files

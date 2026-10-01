@@ -28,7 +28,7 @@ jobs:
       # Every suite runs even when one fails, so one run shows them all.
       - run: |
           rc=0
-          for t in gate check-pr roles-in-sync precedents brief review debate ci-review init pr-body open-issue eval doctor; do
+          for t in gate check-pr roles-in-sync precedents brief review debate ci-review init pr-body open-issue eval doctor newer-copy; do
             echo "::group::$t"
             bash "test/$t.test.sh" || rc=1
             echo "::endgroup::"

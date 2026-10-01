@@ -7,6 +7,11 @@
   command: a merge with `2>&1` before the number had the gate check the
   current branch's PR while gh merged the numbered one. From an
   adopter's hook log.
+- `debate.sh` and `stamp.sh` warn when they are an old copy in the
+  plugin cache with a newer version installed next to it, and SKILL.md
+  says never to pick the directory by listing the cache. An adopter's
+  agent listed the cache with a plain `sort`, which puts 0.9.0 after
+  0.23.1, and stamped records with 0.9.0 for days.
 - A record heading edited by hand (`## Accusation (round 2)`) now fails
   with a message that names it and says to regenerate the body with
   `pr-body.sh --update`, in the CI check and in `stamp.sh`. Before, the
