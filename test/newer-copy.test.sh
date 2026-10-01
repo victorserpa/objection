@@ -24,8 +24,17 @@ msg=$(bash "$T/cache/objection/0.23.1/skills/objection/newer-copy.sh" 2>&1)
 [ -z "$msg" ] || fail "0.23.1 warned: [$msg]"
 # A directory that is not a version is ignored.
 mkdir -p "$T/cache/objection/9.9.9-rc/skills/objection"
+printf '9.9.9-rc\n' >"$T/cache/objection/9.9.9-rc/skills/objection/VERSION"
 msg=$(bash "$T/cache/objection/0.23.1/skills/objection/newer-copy.sh" 2>&1)
 [ -z "$msg" ] || fail "a non-version directory counted: [$msg]"
+# A prerelease copy is not ranked: no advice to "upgrade" to an older release.
+cp "$ROOT/skills/objection/newer-copy.sh" "$T/cache/objection/9.9.9-rc/skills/objection/"
+msg=$(bash "$T/cache/objection/9.9.9-rc/skills/objection/newer-copy.sh" 2>&1)
+[ -z "$msg" ] || fail "a prerelease copy warned: [$msg]"
+# Reached through a symlink, the old copy still warns (pwd -P).
+ln -s "$T/cache/objection/0.9.0" "$T/cache/objection/current"
+msg=$(bash "$T/cache/objection/current/skills/objection/newer-copy.sh" 2>&1)
+case "$msg" in *"this is 0.9.0"*"0.23.1 is installed"*) ;; *) fail "the symlinked old copy did not warn: [$msg]" ;; esac
 # Outside the cache layout (this repository): nothing.
 msg=$(bash "$ROOT/skills/objection/newer-copy.sh" 2>&1)
 [ -z "$msg" ] || fail "the repository copy warned: [$msg]"

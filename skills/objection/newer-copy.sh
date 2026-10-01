@@ -5,7 +5,7 @@
 # agent that lost track of the skill's directory went looking there: a
 # plain `sort` put 0.9.0 after 0.23.1, and an adopter's records were
 # stamped by 0.9.0 for days. Advice only: it never stops the script that
-# runs it.
+# runs it, and only copies that ship it can warn (0.9.0 cannot).
 #
 #   bash newer-copy.sh    prints the warning on stderr, or nothing
 dir="$(cd "$(dirname "$0")" && pwd -P)"
@@ -14,6 +14,8 @@ ver=$(cat "$dir/VERSION" 2>/dev/null) || exit 0
 # clone, a skills directory) has no siblings to compare.
 own=$(basename "$(dirname "$(dirname "$dir")")")
 [ "$own" = "$ver" ] || exit 0
+# A prerelease or any other form cannot be ranked against the releases.
+printf '%s\n' "$ver" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$' || exit 0
 root=$(dirname "$(dirname "$(dirname "$dir")")")
 # Numeric by field: `sort -V` is missing from some BSD and busybox sorts.
 newest=$(ls "$root" 2>/dev/null | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' |
