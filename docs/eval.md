@@ -130,7 +130,8 @@ catches a row that cites them and misses one that does not.
 ## Real bugs, replayed
 
 Planted bugs in small files are the easy case. [`eval/real/`](../eval/real)
-replays nine **real** regressions from public repositories: commits that
+replays 24 **real** regressions from public repositories (nine first,
+fifteen more below): commits that
 introduced a defect a later commit fixed, naming the culprit in its
 message. CPython (twice, Python and C), Redis, Rails, Django, Go, Vue,
 ESLint and curl. The code is not stored here (licenses vary):
@@ -166,6 +167,26 @@ or as an estimate (`linter.js:~174`, how a reviewer without line numbers
 cites), which undercounted both sides. `EVAL_KEEP=<dir>` saves every
 answer and `EVAL_RESCORE=<dir>` scores saved answers again without
 calling a model, so a scoring fix is applied to the runs already paid for.
+
+### Fifteen more, and the first nine overstated it
+
+Fifteen more real regressions (2026-10-01: nushell, helix, netty,
+Prometheus, Gitea, Node.js, Vite, Symfony, Npgsql, Rack, Werkzeug), same
+setup, four runs per side, graded by hand
+([results](../eval/results/2026-10-01-real-bugs.md)):
+
+| | right severity | found at any severity |
+|---|---|---|
+| objection, sonnet | 25 of 60 (42%) | 33 of 60 (55%) |
+| plain prompt, same model | 33 of 60 (55%) | 37 of 60 (62%) |
+
+On these, objection did **worse** than the plain prompt: it under-rated
+a bug it found every time (helix: MEDIUM where the plain prompt said
+HIGH) and missed two the plain prompt found (Node.js, Symfony). Over all
+24 real bugs the two are even (54 and 55 of 96). What objection adds that
+a plain prompt does not is the defender, the judge, the gate and the
+record, not a better first read of the diff; five of the fifteen nobody
+found at all.
 
 ## Track record
 

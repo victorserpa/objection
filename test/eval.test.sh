@@ -76,6 +76,20 @@ printf 'a\n' >"$X/one/base/src/a.js" && printf 'b\n' >"$X/one/change/src/a.js"
 printf '{"goal":"g","severity":"HIGH","match":"zzz","file":"src/a.js","lines":[1]}\n' >"$X/one/expect.json"
 line=$(EVAL_FIXTURES="$X" FAKE_ROW="| HIGH | BUG | src/a.js:1 | x | read | p |" bash "$ROOT/eval/run.sh" one 2>/dev/null | awk '$1 == "one"')
 case "$line" in *CAUGHT*) ;; *) fail "EVAL_FIXTURES was not used ($line)" ;; esac
+# A shortened path counts when its directories are in the real one, in
+# order; a path with another directory does not.
+mkdir -p "$X/deep/base/pkg/src/main/x" "$X/deep/change/pkg/src/main/x"
+printf '{"bases":["main"]}\n' >"$X/deep/config.json"
+printf 'a\n' >"$X/deep/base/pkg/src/main/x/Long.java" && printf 'b\n' >"$X/deep/change/pkg/src/main/x/Long.java"
+printf '{"goal":"g","severity":"HIGH","match":"zzz","file":"pkg/src/main/x/Long.java","lines":[1]}\n' >"$X/deep/expect.json"
+for cite in 'pkg/.../Long.java:1' 'Long.java:1' 'main/x/Long.java:1' '`pkg/…/Long.java:1`'; do
+  line=$(EVAL_FIXTURES="$X" FAKE_ROW="| HIGH | BUG | $cite | x | read | p |" bash "$ROOT/eval/run.sh" deep 2>/dev/null | awk '$1 == "deep"')
+  case "$line" in *CAUGHT*) ;; *) fail "the shortened path $cite was not read ($line)" ;; esac
+done
+for cite in 'other/Long.java:1' 'x/main/Long.java:1' 'NotLong.java:1'; do
+  line=$(EVAL_FIXTURES="$X" FAKE_ROW="| HIGH | BUG | $cite | x | read | p |" bash "$ROOT/eval/run.sh" deep 2>/dev/null | awk '$1 == "deep"')
+  case "$line" in *MISSED*) ;; *) fail "the wrong path $cite counted ($line)" ;; esac
+done
 # A range holding a bug line counts; a range too wide to name it does not.
 [ "$(score missing-cleanup "$(printf "$row" '5-12' 'x' 'p')")" = CAUGHT ] || fail "a range holding the bug line was not caught"
 [ "$(score missing-cleanup "$(printf "$row" '1-200' 'x' 'p')")" = MISSED ] || fail "a 200-line range counted as citing the bug"

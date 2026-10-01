@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- **Eval: 15 more real bugs**, and the first nine overstated objection.
+  Hand-graded, 4 runs per side on sonnet: objection rated 42% of them
+  right and found 55%; a plain review prompt on the same model, 55% and
+  62%. Over all 24 real bugs the two are even. The README says so.
+  The scorer now reads a shortened path (`buffer/.../X.java:1375`).
 - The gate no longer reads a redirection as the PR number ("could not
   read the head SHA of PR 2>"), and `2>&1` or `&>` no longer ends the
   command: a merge with `2>&1` before the number had the gate check the

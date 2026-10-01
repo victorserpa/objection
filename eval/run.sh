@@ -106,9 +106,29 @@ for name in "${names[@]}"; do
     // no wider than 60 lines ("a.c:1248-1298" names the bug at 1297; a
     // whole-file range names nothing). "~174" is how a reviewer without
     // line numbers cites an estimate: it counts like "174".
-    const esc = e.file.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const cites = (t) => [...t.matchAll(new RegExp(`${esc}:~?(\\d+)(?:-~?(\\d+))?`, "g"))].some((m) => {
-      const a = +m[1], b = m[2] ? +m[2] : a;
+    // The file as the reviewer wrote it: the full path, or a shortened
+    // one whose directories are all in the real path, in order
+    // ("buffer/.../AdaptivePoolingAllocator.java", "HttpObjectDecoder.java").
+    // Measured on netty: a real catch at the bug line scored MISSED
+    // because the reviewer shortened a 70-character Java path.
+    const dirs = e.file.split("/").slice(0, -1);
+    const base = e.file.split("/").pop();
+    const escB = base.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const inOrder = (pre) => {
+      let at = 0;
+      for (const d of pre.split("/").filter((x) => x && !/^(\.|\.\.\.|\u2026)$/.test(x))) {
+        const k = dirs.indexOf(d, at);
+        if (k < 0) return false;
+        at = k + 1;
+      }
+      return true;
+    };
+    const refs = (t) => [...t.matchAll(new RegExp(`(?<![\\w./\u2026-])([\\w./\u2026-]*/)?${escB}(?::~?(\\d+)(?:-~?(\\d+))?)?`, "g"))]
+      .filter((m) => inOrder(m[1] || ""));
+    const names = (t) => refs(t).length > 0;
+    const cites = (t) => refs(t).some((m) => {
+      if (!m[2]) return false;
+      const a = +m[2], b = m[3] ? +m[3] : a;
       return b >= a && b - a <= 60 && (e.lines || []).some((n) => n >= a && n <= b);
     });
     // The file:line cell cites a bug line, or the defect cell next to it
@@ -118,8 +138,8 @@ for name in "${names[@]}"; do
     const how = (r) => {
       const cells = r.text.split("|");
       // The file:line cell, else the first cell that names the file.
-      let i = cells.findIndex((c) => c.includes(e.file + ":"));
-      if (i < 0) i = cells.findIndex((c) => c.includes(e.file));
+      let i = cells.findIndex((c) => refs(c).some((m) => m[2]));
+      if (i < 0) i = cells.findIndex(names);
       if (i < 0) return "";
       return cites(cells[i]) ? "line" : re.test(cells[i + 1] || "") ? "words" : "";
     };
