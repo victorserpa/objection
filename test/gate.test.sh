@@ -338,6 +338,10 @@ git -C "$R3" checkout -q -b other && printf 'more\n' >>"$R3/a.js" && gitc -C "$R
 git -C "$R3" checkout -q - && gitc -C "$R3" merge -q -s ours other -m "history only"
 (cd "$R3" && bash "$STAMP" "$T/min.md" origin/develop >/dev/null 2>&1) || { echo "FAIL: a merge with no file change did not stamp"; failures=$((failures + 1)); }
 [ -f "$R3/.git/objection/$(git -C "$R3" rev-parse HEAD).md" ] || { echo "FAIL: the empty merge's record was not stored"; failures=$((failures + 1)); }
+# ...but a HEAD the base already has is refused: an empty diff there means
+# a stale or wrong base, not a merge.
+git -C "$R3" update-ref refs/remotes/origin/develop HEAD
+(cd "$R3" && bash "$STAMP" "$T/min.md" origin/develop >/dev/null 2>&1) && { echo "FAIL: a HEAD already in the base stamped"; failures=$((failures + 1)); }
 R2="$T/stamp-docs"
 git init -q "$R2" && optin "$R2" && mkdir -p "$R2/src" && printf 'code\n' >"$R2/src/auth.js" &&
   gitc -C "$R2" add . && gitc -C "$R2" commit -q -m base && git -C "$R2" update-ref refs/remotes/origin/develop HEAD

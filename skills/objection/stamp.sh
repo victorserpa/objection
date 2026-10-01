@@ -71,6 +71,12 @@ esac
 git rev-parse --verify -q "$base" >/dev/null ||
   { echo "unknown base: $base (run git fetch origin)." >&2; exit 1; }
 
+# HEAD already in the base (a stale or wrong base, a branch merged
+# already) also gives an empty diff: that is not a merge to approve.
+if git merge-base --is-ancestor HEAD "$base"; then
+  echo "HEAD is already in $base: nothing to stamp (is the base right?)." >&2
+  exit 1
+fi
 files=$(git diff --no-renames --name-only "$base"...HEAD)
 # No file changes (a `merge -s ours` that brings a branch's history in,
 # an empty commit): nothing goes into the base, so nothing is debated,
