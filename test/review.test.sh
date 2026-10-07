@@ -17,7 +17,7 @@ printf '%s\n' "$@" >"$FAKE_DIR/args"
 printf '%s\n' "${DISABLE_PROMPT_CACHING:-unset}" >"$FAKE_DIR/cache"
 pwd >"$FAKE_DIR/cwd"
 cat >"$FAKE_DIR/stdin"
-printf '{"result":"| severity | kind |","usage":{"input_tokens":2,"cache_creation_input_tokens":10000,"output_tokens":300},"total_cost_usd":0.1}\n'
+printf '{"result":"| severity | kind |","usage":{"input_tokens":2,"cache_creation_input_tokens":10000,"output_tokens":300},"total_cost_usd":0.1,"modelUsage":{"claude-haiku-x":{"outputTokens":5},"claude-sonnet-x":{"outputTokens":295}}}\n'
 EOF
 chmod +x "$T/claude"
 export OBJECTION_CLAUDE="$T/claude" FAKE_DIR="$T"
@@ -49,6 +49,9 @@ OBJECTION_PROMPT_CACHE=1 bash "$REVIEW" accuser "$T/brief.md" >/dev/null 2>&1
 [ "$(cat "$T/cache")" = unset ] || { echo "FAIL: OBJECTION_PROMPT_CACHE=1 did not keep the cache"; failures=$((failures + 1)); }
 bash "$REVIEW" accuser "$T/brief.md" >/dev/null 2>"$T/err"
 has "$T/err" "accuser used 10002 input + 300 output tokens"
+# The model that answered, not the alias: the one with the most output.
+has "$T/err" "objection: model claude-sonnet-x"
+grep -q "	accuser	claude-sonnet-x	" "$R/.git/objection/usage.log" || { echo "FAIL: the usage log does not name the model that answered"; failures=$((failures + 1)); }
 # The empty tools value must reach claude as an empty argument.
 awk 'prev=="--tools" && $0!="" {bad=1} {prev=$0} END{exit bad}' "$T/args" || { echo "FAIL: --tools was not empty"; failures=$((failures + 1)); }
 # No CLAUDE.md where it runs.

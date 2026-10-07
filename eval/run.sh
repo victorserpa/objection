@@ -202,7 +202,10 @@ case "${OBJECTION_RUNNER:-claude}" in
 esac
 [ "$total" -gt 0 ] || { echo "no fixture matched: nothing ran." >&2; exit 2; }
 [ -z "${EVAL_BASELINE:-}" ] || who="$who, BASELINE (plain prompt, raw diff)"
-echo "runner: $who; $pass of $total as expected"
+# The model ids that answered (review.sh prints them): an alias moves to
+# a new model without notice, and two runs compare only on the same one.
+models=$(cat "$T"/*.err 2>/dev/null | sed -n 's/^objection: model //p' | sort -u | paste -sd, -)
+echo "runner: $who${models:+ ($models)}; $pass of $total as expected"
 # Real bugs (EVAL_FIXTURES) are graded by hand before a number is quoted:
 # a row that cites a bug line counts even when it describes another
 # defect on that line, and the 2026-10-01 run read 6 of 60 too high.

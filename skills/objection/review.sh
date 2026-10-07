@@ -369,9 +369,16 @@ const inTok = (u.input_tokens || 0) + (u.cache_creation_input_tokens || 0) + (u.
 process.stdout.write((j.result || "") + "\n");
 process.stderr.write(`objection: ${process.argv[2]} used ${inTok} input + ${u.output_tokens || 0} output tokens` +
   (j.total_cost_usd !== undefined ? ` ($${Number(j.total_cost_usd).toFixed(3)})` : "") + "\n");
+// The model that answered, not the alias asked for: an alias such as
+// "sonnet" moves to a new model without notice, and an eval read on two
+// days compares two models (eval/results/2026-10-01-real-bugs.md).
+const asked = process.argv[6];
+const used = Object.entries(j.modelUsage || {}).sort((a, b) => (b[1].outputTokens || 0) - (a[1].outputTokens || 0));
+const model = used.length ? used[0][0] : asked;
+if (used.length) process.stderr.write(`objection: model ${model}\n`);
 // One tab-separated line per run: date, branch, commit, role, model,
 // input, output, cost, status. A failed write never loses the answer.
-const [, , , log, branch, head, model] = process.argv;
+const [, , , log, branch, head] = process.argv;
 if (log) {
   try {
     require("fs").appendFileSync(log, [new Date().toISOString(), branch, head, process.argv[2], model, inTok,

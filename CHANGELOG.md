@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- Each review names the model that answered, not only the alias asked
+  for: `review.sh` prints `objection: model <id>` and writes the id to
+  the usage log, and `eval/run.sh` lists the ids in its runner line. An
+  alias such as `sonnet` moved to a new model between two eval runs five
+  days apart, and nothing recorded it.
+
 ## 0.24.0 (2026-10-06)
 
 - Measured again five days later with nothing changed in objection: about 43
