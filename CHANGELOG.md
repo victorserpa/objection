@@ -1,7 +1,11 @@
 # Changelog
 
-## Unreleased
+## 0.24.0 (2026-10-06)
 
+- Measured again five days later with nothing changed in objection: about 43
+  of 60 instead of 29, most likely because the model behind `sonnet`
+  changed (same code, same brief; the run does not record the model
+  id). Eval numbers compare only within one day ([results](eval/results/2026-10-01-real-bugs.md)).
 - The brief puts the diff first, right after the reading rules, and the
   context (invariants, precedents, definitions) after it; the diff
   keeps its line numbers. Before, the diff came last. On the 15 real
