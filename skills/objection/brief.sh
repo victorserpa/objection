@@ -226,7 +226,16 @@ else
   rm -f "$err" "$prec"
 fi
 
-diff=$(git diff -U3 "$diff_base"...HEAD "${X[@]}")
+# Ten lines of context around each change, not three: a declaration a
+# few lines above a hunk (a logger field, a guard) is then in view, and
+# the accuser stops reporting it missing. Measured on one day and one
+# model (eval/results/2026-10-01-real-bugs.md): false alarms on the
+# clean cases 2 of 36 against 3, the field one gone; real bugs 48 of 60
+# against 46. The price: the diff is about 40% longer on this
+# repository's and an adopter's last 40 commits, so a review reads more
+# and a large diff reaches OBJECTION_BRIEF_MAX_LINES sooner (8% more per
+# review on the eval's small diffs).
+diff=$(git diff -U10 "$diff_base"...HEAD "${X[@]}")
 # The diff as the reviewers read it: right after the reading rules, with
 # the context after it, each hunk line numbered by the new file so a
 # finding cites the line the code is on. Measured on the real-bug eval

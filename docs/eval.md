@@ -192,7 +192,9 @@ Moving the diff to the top of the brief, with the context after it,
 closed part of the gap: 29 of 60 at the right severity (from 26 with
 the severity rubric), no false alarm on the clean cases. Five days later
 the same setup read about 43 of 60 with nothing in objection changed,
-most likely a model change: these numbers compare only within one day. Details in the [results](../eval/results/2026-10-01-real-bugs.md).
+most likely a model change: these numbers compare only within one day. Measured
+the same day on the same model, objection read 48 of 60 against 37 for
+the plain prompt. Details in the [results](../eval/results/2026-10-01-real-bugs.md).
 
 ## Track record
 

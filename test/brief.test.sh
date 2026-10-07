@@ -165,11 +165,11 @@ printf 'e\n' >>src/ui.ts && git add . && gitc commit -q -m ui4
 out=$(bash "$BRIEF" origin/main)
 has "$out" "<!-- objection-defender: haiku -->"
 has "$out" "<!-- objection-later-effort: medium -->"
-# Three lines of context, not five: the diff is what the reviewers pay for.
+# Ten lines of context: a declaration a few lines above a change is in view.
 seq 1 30 >src/ctx.ts && git add . && gitc commit -q -m ctx && git update-ref refs/remotes/origin/main HEAD
 sed 's/^15$/fifteen/' src/ctx.ts >src/ctx.tmp && mv src/ctx.tmp src/ctx.ts && git add . && gitc commit -q -m ctx2
 out=$(bash "$BRIEF" origin/main)
-grep -qx '   12  12' "$out" || { echo "FAIL: the brief lost the third line of context"; failures=$((failures + 1)); }
+grep -qx '    5  5' "$out" || { echo "FAIL: the brief lost the tenth line of context"; failures=$((failures + 1)); }
 # Each hunk line carries its new-file line number; a removed line none.
 grep -qx '   15 +fifteen' "$out" || { echo "FAIL: an added line is not numbered by the new file"; failures=$((failures + 1)); }
 grep -qx '      -15' "$out" || { echo "FAIL: a removed line got a number"; failures=$((failures + 1)); }
@@ -184,7 +184,7 @@ printf 'n\n' >src/new.ts && git add . && gitc commit -q -m new
 out_new=$(bash "$BRIEF" origin/main)
 grep -qx -- '--- /dev/null' "$out_new" || { echo "FAIL: a new file lost its /dev/null line"; failures=$((failures + 1)); }
 git reset -q --hard HEAD~1
-grep -qx '   11  11' "$out" && { echo "FAIL: the brief has more than three lines of context"; failures=$((failures + 1)); }
+grep -qx '    4  4' "$out" && { echo "FAIL: the brief has more than ten lines of context"; failures=$((failures + 1)); }
 
 # Nothing to review, or an unknown base: refuse.
 (cd "$T/fresh" && git update-ref refs/remotes/origin/main HEAD && bash "$BRIEF" origin/main >/dev/null 2>&1) && { echo "FAIL: empty diff accepted"; failures=$((failures + 1)); }

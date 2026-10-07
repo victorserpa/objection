@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- The brief shows ten lines of context around each change, not three. A
+  declaration a few lines above a hunk is then in view: the accuser had
+  reported a logger as undeclared in 2 of 4 runs, and in none with ten
+  lines. Same day, same model, four runs: 48 of 60 real bugs at the
+  right severity against 46, false alarms on the clean cases 2 of 36
+  against 3 (both within the noise of four runs: the logger alarm went,
+  a `clean-py` one appeared once). A plain prompt on the same day read
+  37 of 60. The price: the diff is about 40% longer on real repositories
+  (8% more per review on the eval's small diffs), and a large diff
+  reaches `OBJECTION_BRIEF_MAX_LINES` sooner.
 - Each review names the model that answered, not only the alias asked
   for: `review.sh` prints `objection: model <id>` and writes the id to
   the usage log, and `eval/run.sh` lists the ids in its runner line. An
