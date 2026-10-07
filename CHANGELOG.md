@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.24.1 (2026-10-07)
 
 - The brief shows ten lines of context around each change, not three. A
   declaration a few lines above a hunk is then in view: the accuser had

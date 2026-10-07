@@ -154,7 +154,7 @@ More, with measurements and when it is not worth it:
 | [docs/eval.md](docs/eval.md) | the eval: cases, scoring, results |
 | [docs/limits.md](docs/limits.md) | limits, costs, when it is worth it, how it compares |
 | [docs/layout.md](docs/layout.md) | where everything lives in this repository |
-| [CHANGELOG.md](CHANGELOG.md) | every release; pin `@v0.24.0` or a SHA instead of `@v1` to stay on one |
+| [CHANGELOG.md](CHANGELOG.md) | every release; pin `@v0.24.1` or a SHA instead of `@v1` to stay on one |
 
 ## License
 
