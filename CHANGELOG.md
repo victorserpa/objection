@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.24.2 (2026-10-12)
 
 - The brief lists the other uses, in the changed files, of a code name
   the diff uses less than before (at most 6 names and 40 lines, from
