@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+- The brief lists the other uses, in the changed files, of a code name
+  the diff uses less than before (at most 6 names and 40 lines, from
+  HEAD, outside the hunks; doc files and comments give no names). A change that moves one use of a field to a
+  new one and leaves the rest on the old one is now visible: on a real
+  Prometheus regression, found in 4 of 4 runs against none, measured
+  twice. Same day, same model, 15 real bugs: 52 of 60 at the right
+  severity against 47, with a broader first version (it also listed
+  names the diff started using); the narrowed one was measured again on
+  the four cases where its section appears, with the same result.
+
 ## 0.24.1 (2026-10-07)
 
 - The brief shows ten lines of context around each change, not three. A

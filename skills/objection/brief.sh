@@ -235,7 +235,10 @@ fi
 # repository's and an adopter's last 40 commits, so a review reads more
 # and a large diff reaches OBJECTION_BRIEF_MAX_LINES sooner (8% more per
 # review on the eval's small diffs).
-diff=$(git diff -U10 "$diff_base"...HEAD "${X[@]}")
+# Fixed prefixes and unquoted paths: the parsers below read "+++ b/<path>",
+# and a user's diff.noprefix, diff.mnemonicPrefix or core.quotePath would
+# change that line.
+diff=$(git -c core.quotePath=false diff --src-prefix=a/ --dst-prefix=b/ -U10 "$diff_base"...HEAD "${X[@]}")
 # The diff as the reviewers read it: right after the reading rules, with
 # the context after it, each hunk line numbered by the new file so a
 # finding cites the line the code is on. Measured on the real-bug eval
@@ -310,6 +313,92 @@ process.stdin.setEncoding("utf8").on("data", (d) => (diff += d)).on("end", () =>
   }
   process.stdout.write(out.join("\n\n"));
 });' "${X[@]}" 2>/dev/null) || definitions=""
+
+# Other uses, in the changed files, of the names the diff uses less: a
+# name in removed lines more often than in added ones (a field the
+# change stopped using here, first those it dropped altogether). A change
+# that moves one call from an old field to a new one leaves the other
+# uses of the old field on the old path, and those lines are outside the
+# diff (eval/real: prometheus-4bdaea7, three uses of the old storage
+# path in the same file). Read from HEAD, lines inside the diff's hunks
+# left out; doc files and comment lines give no names. One git grep for
+# all of them. Capped: 6 names shown, a name with more than 12 uses
+# elsewhere is too common to help, 40 lines in all.
+other_uses=$(printf '%s\n' "$diff" | node -e '
+const { execFileSync } = require("child_process");
+let diff = "";
+process.stdin.setEncoding("utf8").on("data", (d) => (diff += d)).on("end", () => {
+  // Code names only: prose in a doc file, or a comment, would fill the
+  // section with English words.
+  const prose = /\.(md|mdx|markdown|rst|txt|adoc)$|(^|\/)(CHANGELOG|README|LICENSE|NOTICE)[^/]*$/i;
+  // "#define X" and "*ptr = x" are code, "# note" and " * doc" are not.
+  const comment = /^\s*(\/\/|#(\s|$)|\*(\s|\/|$)|\/\*|--\s|;)/;
+  const skip = new Set("this self that true false null none None nil undefined return const function async await static public private protected final class struct import export from default string number boolean else elif then case break continue void Self super delete typeof instanceof while catch switch throw throws yield print elsif unless foreach match lambda".split(" "));
+  // A word counts as a code name when its shape says so (camelCase,
+  // snake_case, a digit) or its place does (after a dot, before a paren).
+  const count = (l, into) => {
+    for (const m of l.matchAll(/[A-Za-z_$][A-Za-z0-9_$]*/g)) {
+      const w = m[0], before = l[m.index - 1], after = l.slice(m.index + w.length).trimStart()[0];
+      if (w.length < 4 || skip.has(w)) continue;
+      if (!(/.[A-Z_0-9$]/.test(w) || before === "." || after === "(")) continue;
+      into.set(w, (into.get(w) || 0) + 1);
+    }
+  };
+  const files = [], hunks = {};
+  let file = null, header = false;
+  const removed = new Map(), added = new Map();
+  for (const l of diff.split("\n")) {
+    if (l.startsWith("diff --git ")) { header = true; file = null; continue; }
+    if (header) {
+      if (l.startsWith("+++ ")) {
+        file = l.startsWith("+++ b/") ? l.slice(6) : null;
+        if (file && prose.test(file)) file = null;
+        if (file) { files.push(file); hunks[file] = []; }
+      }
+      if (!l.startsWith("@@")) continue;
+      header = false;
+    }
+    if (!file) continue;
+    const h = l.match(/^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@/);
+    if (h) { const a = Number(h[1]); hunks[file].push([a, a + Number(h[2] ?? 1) - 1]); continue; }
+    const body = l.slice(1);
+    if (comment.test(body)) continue;
+    if (l.startsWith("-")) count(body, removed);
+    else if (l.startsWith("+")) count(body, added);
+  }
+  if (!files.length) return;
+  // A name the diff uses less than before: first the ones it stopped
+  // using here altogether (an old field). A name only in new code would
+  // list its library calls (require, setEncoding) and say nothing.
+  const names = [...removed.keys()].filter((w) => removed.get(w) > (added.get(w) || 0)).slice(0, 500);
+  if (!names.length) return;
+  const inHunk = (f, n) => (hunks[f] || []).some(([a, b]) => n >= a && n <= b);
+  // One git grep for every name, then each line given to the names it
+  // holds: a large diff costs one process, and no name is left untried.
+  let all = [];
+  try { all = execFileSync("git", ["grep", "-n", "-w", "-F", ...names.flatMap((n) => ["-e", n]), "HEAD", "--", ...files], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], timeout: 30000, maxBuffer: 64 << 20 }).split("\n").filter(Boolean); } catch { return; }
+  const byName = new Map(names.map((n) => [n, []]));
+  for (const h of all) {
+    const m = h.match(/^HEAD:(.+?):(\d+):(.*)$/);
+    if (!m || inHunk(m[1], Number(m[2]))) continue;
+    for (const w of new Set(m[3].match(/[A-Za-z_$][A-Za-z0-9_$]*/g) || [])) if (byName.has(w)) byName.get(w).push(m);
+  }
+  // First the names the diff dropped altogether (an old field), then the
+  // ones with fewest uses left: those are the most specific.
+  const ranked = names.filter((n) => byName.get(n).length && byName.get(n).length <= 12)
+    .sort((x, y) => Number(added.has(x)) - Number(added.has(y)) || byName.get(x).length - byName.get(y).length);
+  const out = [];
+  let lines = 0, shown = 0;
+  for (const n of ranked) {
+    if (shown >= 6 || lines >= 40) break;
+    const hits = byName.get(n);
+    const take = hits.slice(0, Math.max(0, 40 - lines - 3));
+    if (!take.length) break;
+    out.push(`${n}\n\`\`\`\n${take.map(([, f, at, t]) => `${f}:${at}  ${t.trim()}`).join("\n")}\n\`\`\``);
+    lines += take.length + 3; shown++;
+  }
+  process.stdout.write(out.join("\n\n"));
+});' 2>/dev/null) || other_uses=""
 
 {
   printf '# objection brief: %s @ %s against %s\n\n' "$(git rev-parse --abbrev-ref HEAD)" "${sha:0:7}" "$diff_base"
@@ -392,6 +481,10 @@ process.stdin.setEncoding("utf8").on("data", (d) => (diff += d)).on("end", () =>
       printf 'nothing the base branch shipped, and a migration among them has not\n'
       printf 'run where the base deploys. Judge them as new code.\n\n%s\n\n' "$branch_new"
     fi
+  fi
+  if [ -n "$other_uses" ]; then
+    printf '\n## Other uses of the names the diff changed (from HEAD, outside the diff)\n\n'
+    printf 'A name the diff uses less than before, and where else these files still use it. A use left on the old name may be one the change missed.\n\n%s\n' "$other_uses"
   fi
   if [ -n "$definitions" ]; then
     printf '\n## Definitions the diff calls (from HEAD, as context)\n\n'

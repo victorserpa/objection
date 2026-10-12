@@ -194,7 +194,10 @@ the severity rubric), no false alarm on the clean cases. Five days later
 the same setup read about 43 of 60 with nothing in objection changed,
 most likely a model change: these numbers compare only within one day. Measured
 the same day on the same model, objection read 48 of 60 against 37 for
-the plain prompt. Details in the [results](../eval/results/2026-10-01-real-bugs.md).
+the plain prompt. Listing the other uses of the names a diff changed
+then took it to 52 of 60 (Prometheus's storage path, found in no run
+before; measured with a broader first version, and again, narrowed, on
+the cases where the section appears). Details in the [results](../eval/results/2026-10-01-real-bugs.md).
 
 ## Track record
 
