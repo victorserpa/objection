@@ -248,6 +248,15 @@ git add . && gitc commit -q -m change
 out=$(bash "$BRIEF" origin/main)
 has "$out" "watch(cfg.lateField)"
 cd "$O" || exit 1
+# A path with a space (git ends its +++ line with a tab).
+cd "$T" && git init -q "$T/space" && cd "$T/space" || exit 1
+printf '{"bases":["main"]}\n' >.objection.json
+{ printf 'cfg.spaceField = 1\n'; for i in $(seq 1 30); do printf 'pad %s\n' "$i"; done; printf 'open(cfg.spaceField)\n'; } >"my file.go"
+git add . && gitc commit -q -m base && git update-ref refs/remotes/origin/main HEAD
+sed 's/^open(cfg.spaceField)$/open(cfg.other)/' "my file.go" >m.tmp && mv m.tmp "my file.go" && git add . && gitc commit -q -m change
+out=$(bash "$BRIEF" origin/main)
+has "$out" "my file.go:1  cfg.spaceField = 1"
+cd "$O" || exit 1
 # A change that renames nothing: no section.
 printf 'pad3\n' >>main.go && git add . && gitc commit -q -m pad
 out=$(bash "$BRIEF" HEAD~1)

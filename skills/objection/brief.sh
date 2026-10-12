@@ -351,7 +351,8 @@ process.stdin.setEncoding("utf8").on("data", (d) => (diff += d)).on("end", () =>
     if (l.startsWith("diff --git ")) { header = true; file = null; continue; }
     if (header) {
       if (l.startsWith("+++ ")) {
-        file = l.startsWith("+++ b/") ? l.slice(6) : null;
+        // A path with a space ends its +++ line with a tab.
+        file = l.startsWith("+++ b/") ? l.slice(6).replace(/\t$/, "") : null;
         if (file && prose.test(file)) file = null;
         if (file) { files.push(file); hunks[file] = []; }
       }
@@ -361,7 +362,8 @@ process.stdin.setEncoding("utf8").on("data", (d) => (diff += d)).on("end", () =>
     if (!file) continue;
     const h = l.match(/^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@/);
     if (h) { const a = Number(h[1]); hunks[file].push([a, a + Number(h[2] ?? 1) - 1]); continue; }
-    const body = l.slice(1);
+    // A trailing "// note" is prose too.
+    const body = l.slice(1).replace(/\s\/\/.*$/, "");
     if (comment.test(body)) continue;
     if (l.startsWith("-")) count(body, removed);
     else if (l.startsWith("+")) count(body, added);
@@ -370,13 +372,20 @@ process.stdin.setEncoding("utf8").on("data", (d) => (diff += d)).on("end", () =>
   // A name the diff uses less than before: first the ones it stopped
   // using here altogether (an old field). A name only in new code would
   // list its library calls (require, setEncoding) and say nothing.
-  const names = [...removed.keys()].filter((w) => removed.get(w) > (added.get(w) || 0)).slice(0, 500);
+  // The names dropped altogether first, so a cap on a large diff keeps them.
+  const names = [...removed.keys()].filter((w) => removed.get(w) > (added.get(w) || 0))
+    .sort((x, y) => Number(added.has(x)) - Number(added.has(y))).slice(0, 500);
   if (!names.length) return;
   const inHunk = (f, n) => (hunks[f] || []).some(([a, b]) => n >= a && n <= b);
   // One git grep for every name, then each line given to the names it
   // holds: a large diff costs one process, and no name is left untried.
   let all = [];
-  try { all = execFileSync("git", ["grep", "-n", "-w", "-F", ...names.flatMap((n) => ["-e", n]), "HEAD", "--", ...files], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], timeout: 30000, maxBuffer: 64 << 20 }).split("\n").filter(Boolean); } catch { return; }
+  try { all = execFileSync("git", ["grep", "-n", "-w", "-F", ...names.flatMap((n) => ["-e", n]), "HEAD", "--", ...files], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], timeout: 30000, maxBuffer: 64 << 20 }).split("\n").filter(Boolean); } catch (e) {
+    // git grep exits 1 when nothing matches: that is "no other uses". Any
+    // other failure is said, so it does not read as "none".
+    if (e.status !== 1) process.stdout.write(`(not listed: the lookup failed, ${e.code || "exit " + e.status})`);
+    return;
+  }
   const byName = new Map(names.map((n) => [n, []]));
   for (const h of all) {
     const m = h.match(/^HEAD:(.+?):(\d+):(.*)$/);
@@ -394,7 +403,9 @@ process.stdin.setEncoding("utf8").on("data", (d) => (diff += d)).on("end", () =>
     const hits = byName.get(n);
     const take = hits.slice(0, Math.max(0, 40 - lines - 3));
     if (!take.length) break;
-    out.push(`${n}\n\`\`\`\n${take.map(([, f, at, t]) => `${f}:${at}  ${t.trim()}`).join("\n")}\n\`\`\``);
+    // A minified line is cut: the cap is in lines, and one can be huge.
+    const cut = (t) => (t.length > 200 ? t.slice(0, 200) + " …" : t);
+    out.push(`${n}\n\`\`\`\n${take.map(([, f, at, t]) => `${f}:${at}  ${cut(t.trim())}`).join("\n")}\n\`\`\``);
     lines += take.length + 3; shown++;
   }
   process.stdout.write(out.join("\n\n"));
