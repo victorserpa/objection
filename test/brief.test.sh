@@ -228,13 +228,16 @@ cd "$T" || exit 1
 O="$T/other"
 git init -q "$O" && cd "$O" || exit 1
 printf '{"bases":["main"]}\n' >.objection.json
-{ printf 'cfg.oldPath = 1\n'; for i in $(seq 1 30); do printf 'pad %s\n' "$i"; done; printf 'open(cfg.oldPath)\n'; printf 'pad2 a\nlog(cfg.oldPath)\n'; for i in $(seq 1 28); do printf 'pad2 %s\n' "$i"; done; printf 'watch(cfg.oldPath)\n'; } >main.go
+{ printf 'cfg.oldPath = 1\n'; for i in $(seq 1 30); do printf 'pad %s\n' "$i"; done; printf 'open(cfg.oldPath)\n'; printf 'pad2 a\nlog(cfg.oldPath)\n'; for i in $(seq 1 28); do printf 'pad2 %s\n' "$i"; done; printf 'watch(cfg.oldPath)\n'; printf 'min(cfg.oldPath,%s)\n' "$(printf 'x%.0s' $(seq 1 300))"; } >main.go
 git add . && gitc commit -q -m base && git update-ref refs/remotes/origin/main HEAD
 sed 's/^open(cfg.oldPath)$/open(cfg.newPath)/' main.go >m.tmp && mv m.tmp main.go && git add . && gitc commit -q -m change
 out=$(bash "$BRIEF" origin/main)
 has "$out" "## Other uses of the names the diff changed"
 has "$out" "main.go:1  cfg.oldPath = 1"
 has "$out" "main.go:63  watch(cfg.oldPath)"
+# A minified line is cut at 200 characters.
+grep -q 'main.go:64  min(cfg.oldPath,x\{180,\} …$' "$out" || { echo "FAIL: a long line was not cut"; failures=$((failures + 1)); }
+grep -q 'x\{250\}' "$out" && { echo "FAIL: a long line was listed whole"; failures=$((failures + 1)); }
 # Line 34 uses oldPath too, but sits in the hunk's context: the diff
 # already shows it.
 grep -q '^main.go:34 ' "$out" && { echo "FAIL: a line inside the diff was listed as another use"; failures=$((failures + 1)); }

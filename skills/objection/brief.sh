@@ -362,8 +362,7 @@ process.stdin.setEncoding("utf8").on("data", (d) => (diff += d)).on("end", () =>
     if (!file) continue;
     const h = l.match(/^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@/);
     if (h) { const a = Number(h[1]); hunks[file].push([a, a + Number(h[2] ?? 1) - 1]); continue; }
-    // A trailing "// note" is prose too.
-    const body = l.slice(1).replace(/\s\/\/.*$/, "");
+    const body = l.slice(1);
     if (comment.test(body)) continue;
     if (l.startsWith("-")) count(body, removed);
     else if (l.startsWith("+")) count(body, added);
@@ -383,7 +382,7 @@ process.stdin.setEncoding("utf8").on("data", (d) => (diff += d)).on("end", () =>
   try { all = execFileSync("git", ["grep", "-n", "-w", "-F", ...names.flatMap((n) => ["-e", n]), "HEAD", "--", ...files], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], timeout: 30000, maxBuffer: 64 << 20 }).split("\n").filter(Boolean); } catch (e) {
     // git grep exits 1 when nothing matches: that is "no other uses". Any
     // other failure is said, so it does not read as "none".
-    if (e.status !== 1) process.stdout.write(`(not listed: the lookup failed, ${e.code || "exit " + e.status})`);
+    if (e.status !== 1) process.stdout.write(`(not listed: the lookup failed, ${e.code || e.signal || "exit " + e.status})`);
     return;
   }
   const byName = new Map(names.map((n) => [n, []]));
