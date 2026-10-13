@@ -410,6 +410,100 @@ process.stdin.setEncoding("utf8").on("data", (d) => (diff += d)).on("end", () =>
   process.stdout.write(out.join("\n\n"));
 });' 2>/dev/null) || other_uses=""
 
+# A line the diff adds, the same, to several functions, and the other
+# functions of that family (names with the same leading words) in the
+# same file that do not have it. A change that moves one step out of a
+# shared function into each of its callers can miss one, and that one is
+# outside the diff (eval/real: code_saturne-0bc2a3a, an initialization
+# moved from _coarse_init into the _automatic_aggregation_* functions
+# but not _automatic_aggregation_fc; no run found it). A function is the
+# nearest definition line above, at column 0, in the file at HEAD: C, Go,
+# Rust and top-level Python and JavaScript; an indented method gives no
+# name, so its lines are not grouped. Capped: 3 lines, 8 functions each.
+same_line=$(printf '%s\n' "$diff" | node -e '
+const { execFileSync } = require("child_process");
+let diff = "";
+process.stdin.setEncoding("utf8").on("data", (d) => (diff += d)).on("end", () => {
+  const prose = /\.(md|mdx|markdown|rst|txt|adoc)$|(^|\/)(CHANGELOG|README|LICENSE|NOTICE)[^/]*$/i;
+  const comment = /^\s*(\/\/|#(\s|$)|\*(\s|\/|$)|\/\*|--\s|;)/;
+  const kw = new Set("if for while switch return sizeof func fn def function catch elif else case do match new delete typeof await".split(" "));
+  // The name a definition line defines, or null: "static int foo(",
+  // "foo(const x *f,", "func (r *T) Foo(", "def foo(", "fn foo<T>(".
+  const defName = (l) => {
+    if (!/^[A-Za-z_$]/.test(l) || /;\s*$/.test(l) || /^(if|for|while|switch|return|else|case|do)\b/.test(l)) return null;
+    for (const m of l.matchAll(/([A-Za-z_$][\w$]*)\s*(<[^()]*>)?\s*\(/g)) if (!kw.has(m[1])) return m[1];
+    return null;
+  };
+  const words = (n) => n.replace(/([a-z0-9])([A-Z])/g, "$1_$2").toLowerCase().split(/[_$]+/).filter(Boolean);
+  const norm = (t) => t.trim().replace(/\s+/g, " ");
+  const added = {};
+  let file = null, header = false, at = 0;
+  for (const l of diff.split("\n")) {
+    if (l.startsWith("diff --git ")) { header = true; file = null; continue; }
+    if (header) {
+      if (l.startsWith("+++ ")) {
+        file = l.startsWith("+++ b/") ? l.slice(6).replace(/\t$/, "") : null;
+        if (file && prose.test(file)) file = null;
+        if (file) added[file] = [];
+      }
+      if (!l.startsWith("@@")) continue;
+      header = false;
+    }
+    if (!file) continue;
+    const h = l.match(/^@@ -\d+(?:,\d+)? \+(\d+)/);
+    if (h) { at = Number(h[1]); continue; }
+    if (l.startsWith("+")) {
+      const t = norm(l.slice(1));
+      // A line worth matching: long enough to be one step, not a comment
+      // or a bare brace, keyword or return.
+      if (t.length >= 12 && !comment.test(t) && /[A-Za-z_$][\w$]*\s*[(=\[.]|[(=]/.test(t)) added[file].push([at, t]);
+      at++;
+    } else if (!l.startsWith("-") && !l.startsWith("\\")) at++;
+  }
+  const out = [];
+  for (const [f, lines] of Object.entries(added)) {
+    if (out.length >= 3 || lines.length < 2) continue;
+    let src;
+    try { src = execFileSync("git", ["show", `HEAD:${f}`], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], timeout: 20000, maxBuffer: 64 << 20 }).split("\n"); } catch { continue; }
+    const defs = [];
+    src.forEach((l, k) => { const n = defName(l); if (n) defs.push([k + 1, n]); });
+    if (defs.length < 3) continue;
+    const owner = (n) => { let d = null; for (const x of defs) { if (x[0] > n) break; d = x; } return d; };
+    const groups = new Map();
+    for (const [n, t] of lines) {
+      const d = owner(n);
+      if (!d) continue;
+      if (!groups.has(t)) groups.set(t, new Set());
+      groups.get(t).add(d[1]);
+    }
+    for (const [t, fns] of groups) {
+      if (out.length >= 3 || fns.size < 2) continue;
+      // The words every receiving function name starts with: at least two,
+      // so "_get" or "test" does not make a family.
+      const ws = [...fns].map(words);
+      let k = 0;
+      while (ws.every((w) => k < w.length - 1 && w[k] === ws[0][k])) k++;
+      if (k < 2) continue;
+      const pre = ws[0].slice(0, k).join("_");
+      const body = (i) => src.slice(defs[i][0] - 1, i + 1 < defs.length ? defs[i + 1][0] - 1 : src.length).map(norm);
+      const seen = new Set(), missing = [];
+      defs.forEach(([line, n], i) => {
+        // The function the line calls is not one that lacks it.
+        if (fns.has(n) || seen.has(n) || new RegExp(`(^|[^\\w$])${n.replace(/\$/g, "\\$")}([^\\w$]|$)`).test(t)) return;
+        const w = words(n);
+        if (w.length <= k || w.slice(0, k).join("_") !== pre) return;
+        seen.add(n);
+        if (!body(i).includes(t)) missing.push(`${f}:${line}  ${n}`);
+      });
+      if (!missing.length) continue;
+      const cut = t.length > 200 ? t.slice(0, 200) + " …" : t;
+      const more = missing.length > 8 ? `\n(and ${missing.length - 8} more)` : "";
+      out.push(`\`${cut}\` is added to ${[...fns].sort().join(", ")}. Without it:\n\`\`\`\n${missing.slice(0, 8).join("\n")}${more}\n\`\`\``);
+    }
+  }
+  process.stdout.write(out.join("\n\n"));
+});' 2>/dev/null) || same_line=""
+
 {
   printf '# objection brief: %s @ %s against %s\n\n' "$(git rev-parse --abbrev-ref HEAD)" "${sha:0:7}" "$diff_base"
   # Read by debate.sh; it is the base branch's budget, like the rules.
@@ -495,6 +589,10 @@ process.stdin.setEncoding("utf8").on("data", (d) => (diff += d)).on("end", () =>
   if [ -n "$other_uses" ]; then
     printf '\n## Other uses of the names the diff changed (from HEAD, outside the diff)\n\n'
     printf 'A name the diff uses less than before, and where else these files still use it. A use left on the old name may be one the change missed.\n\n%s\n' "$other_uses"
+  fi
+  if [ -n "$same_line" ]; then
+    printf '\n## A line the diff adds to several functions, and the functions like them without it (from HEAD)\n\n'
+    printf 'Functions in the same file whose names start like the ones that got the line. One of them may need it too.\n\n%s\n' "$same_line"
   fi
   if [ -n "$definitions" ]; then
     printf '\n## Definitions the diff calls (from HEAD, as context)\n\n'

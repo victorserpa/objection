@@ -266,6 +266,34 @@ out=$(bash "$BRIEF" HEAD~1)
 hasnt "$out" "## Other uses of the names the diff changed"
 cd "$T" || exit 1
 
+# A line the diff adds to several functions of a family: the others
+# that lack it are listed, one that already has it and one outside the
+# family are not, and a line given to one function only makes no section.
+S="$T/same"
+git init -q "$S" && cd "$S" || exit 1
+printf '{"bases":["main"]}\n' >.objection.json
+for fn in agg_rows_one agg_rows_two agg_rows_three agg_rows_four other_thing; do
+  printf 'static void\n%s(int *buf)\n{\n' "$fn"
+  [ "$fn" = agg_rows_four ] && printf '  init_rows(buf, -2);\n'
+  for i in $(seq 1 25); do printf '  step(buf, %s);\n' "$i"; done
+  printf '}\n\n'
+done >agg.c
+git add . && gitc commit -q -m base && git update-ref refs/remotes/origin/main HEAD
+awk '{print} /^(agg_rows_one|agg_rows_two)\(int \*buf\)$/{getline; print; print "  init_rows(buf, -2);"}' agg.c >a.tmp && mv a.tmp agg.c
+git add . && gitc commit -q -m change
+out=$(bash "$BRIEF" origin/main)
+has "$out" "## A line the diff adds to several functions, and the functions like them without it"
+has "$out" '`init_rows(buf, -2);` is added to agg_rows_one, agg_rows_two. Without it:'
+grep -q '^agg.c:[0-9]*  agg_rows_three$' "$out" || { echo "FAIL: a sibling without the line was not listed"; failures=$((failures + 1)); }
+hasnt "$out" "agg_rows_four"
+hasnt "$out" "  other_thing"
+printf 'pad\n' >>agg.c && git add . && gitc commit -q -m pad
+awk '{print} /^agg_rows_three\(int \*buf\)$/{getline; print; print "  init_rows(buf, -3);"}' agg.c >a.tmp && mv a.tmp agg.c
+git add . && gitc commit -q -m one
+out=$(bash "$BRIEF" HEAD~1)
+hasnt "$out" "## A line the diff adds to several functions"
+cd "$T" || exit 1
+
 # A file name with an accent still matches the invariant's paths.
 U="$T/utf"
 git init -q "$U" && cd "$U" || exit 1
