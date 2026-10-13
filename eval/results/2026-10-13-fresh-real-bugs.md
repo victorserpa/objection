@@ -96,7 +96,9 @@ Fifteen cases, four runs each, one model, one effort. The candidates
 were found and the expected severities set by a model and checked by
 hand; no Python, Rust or TypeScript case made the cut. The grading was
 done by the same session that ran and tuned objection, with no second
-grader; the answers are kept so anyone can grade them again.
+grader; the grade of every run is in
+[2026-10-13-grades.json](2026-10-13-grades.json), with the blind one
+below.
 
 The patterns of six cases were narrowed after the review of this change
 (identifiers any finding on the file would use, such as `EventThread`

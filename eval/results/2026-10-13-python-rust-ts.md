@@ -58,5 +58,12 @@ hand count is lower. The scapy, slint and gbrain patterns were then
 narrowed so that their words match only the defect the fix repaired;
 that does not change the hand count.
 
-Eight cases, four runs, one model. The expected severities were set by
+The grade of every run, by hand and blind, is in
+[2026-10-13-grades.json](2026-10-13-grades.json); the answers are not
+in the repository (licenses vary), and the cases rebuild with
+`eval/real/fetch.sh`. The Gallery, scapy and gbrain patterns were
+narrowed again after the review of this change, with the same words
+catches as the hand count.
+
+Eight cases, four runs, one model, on cases not used for tuning. The expected severities were set by
 a model and checked by hand.
