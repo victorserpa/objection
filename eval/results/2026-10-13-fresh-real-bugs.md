@@ -106,3 +106,44 @@ change, and nothing in objection changed between the runs and this
 file. The automatic count stayed at 39 and 21; one tailscale catch (a
 hang, said without "copy" or "direction") moved from `(line+words)` to
 `(line only)`, which is why 8 are listed above.
+
+## A second grader, blind (2026-10-13)
+
+The same 120 answers graded again by another model (`claude-opus-5-5`):
+per case, the eight answers shuffled and labelled A to H, with the fix
+commit's message and the case summary as the bug, and the instruction
+to count a finding only for the same defect and cause, not the same
+line. It never saw which side wrote an answer, though the plain
+prompt's answers cite lines differently (`~line`), so it may have
+guessed.
+
+| | right severity | found at any severity |
+|---|---|---|
+| objection 0.24.2 | 36 of 60 | 43 of 60 |
+| plain prompt | 23 of 60 | 35 of 60 |
+
+It agreed with the hand count on 104 of 120 answers. The rest were
+two cases: on cilium-e27ce9e it counted none of the eight (the runs
+blamed a deleted or lagging CID, the fix an empty one: stricter than
+the hand count), and on code_saturne-0bc2a3a it counted six that said
+"any other aggregation function without the init" (looser). Plus one
+MPD and one Neovim answer.
+
+## The defender on the same answers
+
+`EVAL_DEFENSE=1` on the saved answers: every BLOCKER and HIGH row of
+every answer the scorer counted as a catch went to the defender, 70
+rows in 60 answers. It refuted none: 56 upheld, 13 could not verify
+(code outside the diff: NodeBB's privilege code, Odoo's reactivity), 1
+upheld with a lower severity proposed.
+
+## Same line, other functions (2026-10-13)
+
+code_saturne-0bc2a3a moved an initialization out of a shared function
+into each aggregation function, and missed one. The brief now lists,
+when the diff adds the same line to several functions with the same
+leading words, the functions of that family in the file that lack it.
+Same day, same model, 4 runs each, interleaved: 0.24.3 named the
+function left out 0 times, with the section 4 times (BLOCKER once, HIGH
+three times). The section appears on 1 of the 39 real bugs and none of
+the planted ones. This makes code_saturne-0bc2a3a a tuned case.

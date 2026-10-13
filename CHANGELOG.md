@@ -1,5 +1,21 @@
 # Changelog
 
+## Unreleased
+
+- The brief lists, when the diff adds the same line to several functions
+  of one family (names with the same leading words), the functions of
+  that family in the same file that do not have it. On a real
+  regression nobody had found (code_saturne-0bc2a3a, an initialization
+  moved into all but one of the aggregation functions), 4 of 4 runs
+  named the one left out, against 0 of 4. The section appears in 1 of
+  the 39 real bugs and none of the planted cases. That case is one of
+  the fresh fifteen, so it is now tuned on.
+- The fresh fifteen were graded a second time, blind, by another model
+  (Opus, the eight answers of a case shuffled and unlabelled): it agreed
+  with the hand count on 104 of 120 runs and put the gap at 36 against
+  23 (the hand count: 38 against 24). The defender, run on every catch
+  the scorer counted there, refuted none of 70 rows.
+
 ## 0.24.3 (2026-10-13)
 
 - Fifteen fresh real regressions in the eval (2026-07 to 2026-09, from
