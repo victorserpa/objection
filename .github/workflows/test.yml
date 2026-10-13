@@ -10,12 +10,13 @@ permissions:
   contents: read
 jobs:
   os:
-    # Windows runs the same bash scripts through Git Bash, which is what
-    # Claude Code itself requires there.
+    # Linux only: macOS minutes cost the most and Windows twice Linux. Run
+    # the suites locally on a Mac before a release that touches the
+    # scripts.
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
     defaults:
       run:

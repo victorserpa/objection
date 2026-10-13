@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- CI runs the tests on Linux only. macOS and Windows runners cost
+  most of the Actions bill; they are checked by hand before a release.
+
 ## 0.24.4 (2026-10-13)
 
 - The same-line section no longer treats a column-0 `try:`, `else:`,
