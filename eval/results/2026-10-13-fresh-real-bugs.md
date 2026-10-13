@@ -82,8 +82,8 @@ or above. Two calls were close:
   written with the first one only and was widened to both after
   reading the fix. Counting only the first: 35 against 23.
 
-The automatic scorer read 39 against 21. It listed 7 catches as
-`(line only)`; checked by hand, 6 were about the bug and one (orm,
+The automatic scorer read 39 against 21. It listed 8 catches as
+`(line only)`; checked by hand, 7 were about the bug and one (orm,
 objection) was about another defect on the bug line, so the hand count
 is one lower for objection. It missed plain-prompt catches cited without
 a line number (`linkKlibs.kt, SortingKey.compareTo`,
@@ -94,4 +94,10 @@ a line number (`linkKlibs.kt, SortingKey.compareTo`,
 
 Fifteen cases, four runs each, one model, one effort. The candidates
 were found and the expected severities set by a model and checked by
-hand; no Python, Rust or TypeScript case made the cut.
+hand; no Python, Rust or TypeScript case made the cut. The grading was
+done by the same session that ran and tuned objection, with no second
+grader; the answers are kept so anyone can grade them again.
+
+The patterns of six cases were narrowed after the review of this change
+(identifiers any finding on the file would use, such as `EventThread`
+or `shorten_fnames`); the automatic count did not move (39 and 21).

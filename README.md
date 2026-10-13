@@ -106,7 +106,9 @@ mostly on the severe ones (a buffer overflow rated BLOCKER every time,
 never by the plain prompt), with false alarms on 2 of 36 clean reviews
 (the plain prompt: 2 of 18). On 15 fresh regressions not used for
 tuning ([results](eval/results/2026-10-13-fresh-real-bugs.md)): 63%
-against 40%. 39 real bugs
+against 40% (58% against 38% if one case counts only the first of the
+two defects its fix repaired), graded by hand by the session that
+tuned it. 39 real bugs
 are a small sample, and no number here says it catches everything. Scoring, every case and the history: [docs/eval.md](docs/eval.md).
 
 ## How it works
