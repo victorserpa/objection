@@ -233,8 +233,8 @@ repositories, eight of the missed or under-rated cases gained nothing:
 the "Definitions the diff calls" section filled up with generic names
 (`cwd`, `unwrap`, `last`). With the key definition placed by hand,
 fish-shell reached HIGH in 3 of 4 runs, but slint and neovim stayed at
-0. The section now skips generic names, matches Rust macros and ranks
-specific names first ([results](../eval/results/2026-10-13-outside-diff.md)).
+0. The section now puts generic names last, matches Rust macros and
+ranks specific names first ([results](../eval/results/2026-10-13-outside-diff.md)).
 
 ## Track record
 

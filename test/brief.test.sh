@@ -222,7 +222,7 @@ out=$(bash "$BRIEF" HEAD~1)
 hasnt "$out" "## Definitions the diff calls"
 cd "$T" || exit 1
 
-# Which definitions: a Rust macro call ("fmt_msg!(") finds its
+# Which definitions: a Rust macro call ("fmt_msg!{") finds its
 # macro_rules; a generic name (clear) is left out; a specific name
 # (load_rows) comes before plain words even when the diff calls 16 of
 # them first. A name that starts with "test" but is not a test function
@@ -232,18 +232,23 @@ git init -q "$D2" && cd "$D2" || exit 1
 printf '{"bases":["main"]}\n' >.objection.json
 mkdir -p src
 printf 'macro_rules! fmt_msg {\n    ($x:expr) => { $x };\n}\n' >src/macros.rs
-printf 'pub fn clear() {}\npub fn load_rows() -> u32 {\n    1\n}\n' >src/rows.rs
+printf 'pub fn clear() {}\npub fn allowed() {}\npub fn load_rows() -> u32 {\n    1\n}\n' >src/rows.rs
 plain=""; for w in alpha bravo charlie delta echo foxtrot golf hotel india juliet kilo lima mike november oscar papa; do printf 'pub fn %s() {}\n' "$w" >>src/words.rs; plain="$plain    $w();\n"; done
 printf 'pub fn run() {}\n' >src/main.rs
 printf 'pub fn testConnection() -> bool {\n    true\n}\n' >src/conn.rs
 git add . && gitc commit -q -m base && git update-ref refs/remotes/origin/main HEAD
-printf "pub fn go() {\n    clear();\n$plain    let n = load_rows();\n    testConnection();\n    fmt_msg!(n);\n}\n" >>src/main.rs
+printf "pub fn go() {\n    clear();\n$plain    let n = load_rows();\n    testConnection();\n    fmt_msg!{n};\n    allowed();\n}\n" >>src/main.rs
 git add . && gitc commit -q -m change
 out=$(bash "$BRIEF" origin/main)
-has "$out" "src/rows.rs:2 (load_rows)"
+has "$out" "src/rows.rs:3 (load_rows)"
 has "$out" "src/macros.rs:1 (fmt_msg)"
 has "$out" "src/conn.rs:1 (testConnection)"
 hasnt "$out" "(clear)"
+# A generic name is looked up last, not dropped: with few other
+# definitions, the project's one "allowed" still shows.
+printf 'pub fn more() {\n    allowed();\n}\n' >>src/rows.rs && git add . && gitc commit -q -m more
+out=$(bash "$BRIEF" HEAD~1)
+has "$out" "src/rows.rs:2 (allowed)"
 cd "$T" || exit 1
 
 # Other uses of a name the diff stopped using: the change moves one use

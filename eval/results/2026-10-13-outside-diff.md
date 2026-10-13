@@ -46,29 +46,33 @@ reach the bug.
 
 ## The change
 
-The section now skips names every codebase calls (std methods, logging,
-Rust wrappers such as `unwrap` and `into_iter`), matches Rust macro calls
-(`name!(` against `macro_rules! name`), skips test functions unless the
+The section now looks up names every codebase calls (std methods,
+logging, Rust wrappers such as `unwrap` and `into_iter`) last, as filler
+after every other name, matches Rust macro calls (`name!(`, `name![`,
+`name!{` against `macro_rules! name`), skips test functions unless the
 change is to tests, and ranks snake_case and camelCase names first, then
 bare or path calls, then methods on an object (a name takes its best
-rank); within a rank, the order of the diff. It looks up 20 names, not 15. On the same full
+rank); within a rank, the order of the diff. It looks up to 20 names,
+not 15, and stops once it has 8 definitions. On the same full
 repositories it now picks:
 
 | case | before | after |
 |---|---|---|
 | fish-shell-abaf54f | allowed stdin call_error last offset | localizable_consts wgettext_fmt call_error wgettext offset length |
-| slint-37cac19 | pin apply_pin abs unwrap | apply_pin SharedString |
-| neovim-b296666 | cwd normalize clear | normalize |
+| slint-37cac19 | pin apply_pin abs unwrap | apply_pin SharedString pin |
+| neovim-b296666 | cwd normalize clear | normalize cwd clear |
 | cilium-e27ce9e | getCIDForCEP GetCEPNameFromPod GetAsMap cidResourceKey podResourceKey | getCIDForCEP GetCEPNameFromPod GetAsMap cidResourceKey podResourceKey |
 | streamlit-07d085f | form warning | patch_config_options MemoryUploadedFileManager create_upload_routes get_files |
 | hls.js-a03d5b1 | appendUint8Array parse parsePES | appendUint8Array parsePES |
 
 Four accuser runs with the new brief (a first version, whose fish-shell
-brief also had `into_iter` and the same `wgettext_fmt` definition): fish-shell found 3 of 4, 1 at
+brief also had `into_iter` and the same `wgettext_fmt` definition, and
+which dropped the generic names instead of putting them last): fish-shell found 3 of 4, 1 at
 HIGH (0 before, 3 with the hand-placed definition); cilium 4 of 4, 2 at
 HIGH; slint and neovim still 0. Four runs are too few to call the
 fish-shell move a gain. The change ships because the definitions it
-drops said nothing about any of these diffs, not for a measured catch.
+moves to the end said nothing about any of these diffs, not for a
+measured catch.
 
 Not changed: on a full repository, "Other uses of the names the diff
 changed" also picks up docstring words (`read`, `values`) and test

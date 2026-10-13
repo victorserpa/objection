@@ -283,26 +283,29 @@ process.stdin.setEncoding("utf8").on("data", (d) => (diff += d)).on("end", () =>
   const changedFiles = diff.split("\n").filter((l) => l.startsWith("+++ b/")).map((l) => l.slice(6));
   const onlyTests = changedFiles.length > 0 && changedFiles.every(isTest);
   // Names any codebase calls everywhere (std methods, logging, Rust
-  // wrappers): their definitions say nothing about this change.
+  // wrappers): their definitions rarely say anything about this change,
+  // so they are looked up last, after every other name.
   const generic = new Set("get set has add del pop insert remove contains clear iter next collect clone unwrap format println eprintln write read open close update find join split trim replace keys values items append extend last first cwd pin warning stdin stdout stderr allowed apply call bind toString to_string as_str as_ref into from parse send emit dispatch init run start stop reset size count index slice sort reverse includes indexOf vec Some Ok Err None Box Vec Rc Arc self cls assert_eq assert_ne into_iter iter_mut map_err ok_or unwrap_or as_mut to_owned is_some is_none is_empty abs min max unwrap_or_else unwrap_or_default ok_or_else map_or and_then or_else is_ok is_err starts_with ends_with push_str to_vec to_lowercase to_uppercase to_str len_utf8 querySelector querySelectorAll getElementById addEventListener removeEventListener setTimeout setInterval clearTimeout parseInt parseFloat toFixed toLowerCase toUpperCase startsWith endsWith hasOwnProperty isArray getattr setattr hasattr isinstance Errorf Sprintf Printf Println assertEqual assertTrue debug info warn error trace".split(" "));
-  // Calls ("name(") and Rust macros ("name!("), ranked so the specific
+  // Calls ("name(") and Rust macros ("name!(", "name![", "name!{"), ranked so the specific
   // names come first: a snake_case or camelCase name says more than a
   // plain word, and a bare or path call ("utils::load(") more than a
   // method on some object; a name takes its best rank in the diff. Within
   // a rank, the order of the diff. Test functions only for a change to
   // tests.
   const seen = new Map();
-  for (const l of added) for (const m of l.matchAll(/(\.|::)?([A-Za-z_][A-Za-z0-9_]*)(!?)\s*\(/g)) {
+  for (const l of added) for (const m of l.matchAll(/(\.|::)?([A-Za-z_][A-Za-z0-9_]*)(?:!\s*[([{]|\s*\()/g)) {
     const n = m[2];
-    if (skip.has(n) || generic.has(n) || n.length <= 2 || (!onlyTests && /^(test_|Test[A-Z_])/.test(n))) continue;
+    if (skip.has(n) || n.length <= 2 || (!onlyTests && /^(test_|Test[A-Z_])/.test(n))) continue;
     const specific = /[A-Za-z0-9]_[A-Za-z0-9]|[a-z][A-Z]/.test(n);
-    const rank = specific ? 2 : m[1] === "." ? 0 : 1;
+    const rank = generic.has(n) ? -1 : specific ? 2 : m[1] === "." ? 0 : 1;
     if (!seen.has(n)) seen.set(n, { rank, order: seen.size });
     else seen.get(n).rank = Math.max(seen.get(n).rank, rank);
   }
   const names = [...seen].sort((a, b) => b[1].rank - a[1].rank || a[1].order - b[1].order).slice(0, 20).map(([n]) => n);
   const found = [];
+  let total = 0;
   for (const n of names) {
+    if (total >= 8) break; // enough definitions to fill the section
     // Declarations (a const, let or var only at the top of a file: an
     // indented one is some function local), methods ("async getUser(id) {"
     // at the start of a line) and functions assigned to a property
@@ -313,7 +316,7 @@ process.stdin.setEncoding("utf8").on("data", (d) => (diff += d)).on("end", () =>
     // A test file defines its own helpers: only a change to tests reads them.
     hits = hits.map((h) => h.match(/^HEAD:(.+?):(\d+):(.*)$/))
       .filter((m) => m && !addedText.has(m[3].trim()) && (onlyTests || !isTest(m[1])));
-    if (hits.length && hits.length <= 3) found.push({ n, hits });
+    if (hits.length && hits.length <= 3) { found.push({ n, hits }); total += hits.length; }
   }
   const out = [];
   let lines = 0, defs = 0;

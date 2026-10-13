@@ -2,12 +2,13 @@
 
 ## Unreleased
 
-- "Definitions the diff calls" skips names every codebase calls
-  (`unwrap`, `clear`, `cwd`, logging), matches Rust macro calls
-  (`name!(`) against `macro_rules!`, skips test functions, and ranks
-  snake_case and camelCase names before plain words and methods. On
-  full repositories it used to show `last`, `stdin` or `unwrap` and miss
-  the definition the bug turned on.
+- "Definitions the diff calls" ranks snake_case and camelCase names
+  first, then plain bare calls, then methods, and names every codebase
+  calls (`unwrap`, `clear`, `cwd`, logging) last; it matches Rust macro
+  calls (`name!(`, `name!{`) against `macro_rules!` and skips test
+  functions unless the change is to tests. On full repositories it used
+  to show `last`, `stdin` or `unwrap` and miss the definition the bug
+  turned on.
 - Measured: full-repository context instead of the fixture's touched
   files gained nothing on eight missed or under-rated real bugs; the
   right definition placed by hand helped one of three. Results in
