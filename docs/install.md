@@ -79,8 +79,10 @@ Requirements: `node` (Node.js 18 or later; the local scripts also run on 16, the
 the `codex` CLI to run the reviewers cheaply, and `gh` or `glab` for the
 local gate. Linux and macOS have the first four; on Windows, Git for
 Windows brings `bash` and `perl` (Git Bash, which Claude Code needs
-there anyway). CI runs every test on Linux; macOS and Windows are
-tested by hand before a release, not on every pull request. Git 2.13
+there anyway). CI runs every test on Linux on each pull request; macOS
+and Windows run only when the test workflow is started by hand
+(Actions, test, Run workflow), so a change can break them unnoticed
+until then. Git 2.13
 or later (2017).
 Minimal container images (Alpine) lack `bash` and `perl`: install them.
 

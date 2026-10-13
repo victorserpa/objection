@@ -2,8 +2,9 @@
 
 ## Unreleased
 
-- CI runs the tests on Linux only. macOS and Windows runners cost
-  most of the Actions bill; they are checked by hand before a release.
+- CI runs the tests on Linux only on pushes and pull requests. macOS
+  and Windows runners cost most of the Actions bill; they run when the
+  test workflow is started by hand.
 
 ## 0.24.4 (2026-10-13)
 
