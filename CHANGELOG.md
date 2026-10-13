@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.24.3 (2026-10-13)
 
 - Fifteen fresh real regressions in the eval (2026-07 to 2026-09, from
   repositories it had not used), measured after 0.24.2 shipped and not
