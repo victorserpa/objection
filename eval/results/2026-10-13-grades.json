@@ -1,4 +1,4 @@
-{"note": "Per-run grades for eval/results/2026-10-13-*.md: for each case and run (obj = objection, plain = the plain prompt; 1-4 the run), the highest severity of a finding that describes the bug, or \"-\". hand: graded by the session that ran the eval; blind: claude-opus-5-5, the eight answers of a case shuffled and unlabelled.",
+{"note": "Per-run grades for eval/results/2026-10-13-*.md: for each case and run (obj = objection, plain = the plain prompt; 1-4 the run), the highest severity of a finding that describes the bug, or \"-\". hand: graded by the session that ran the eval; blind: claude-opus-5-5, the eight answers of a case shuffled and unlabelled. A run counts at the right severity when its grade is at or above the case severity in eval/real/cases.jsonl (fresh fifteen: 38 objection and 24 plain by hand, 43 and 37 at any severity).",
 "sets": {
 "fresh-fifteen": {
   "rcc-cb4037d": {"obj1":{"hand":"-","blind":"-"},"obj2":{"hand":"-","blind":"-"},"obj3":{"hand":"-","blind":"-"},"obj4":{"hand":"HIGH","blind":"HIGH"},"plain1":{"hand":"-","blind":"-"},"plain2":{"hand":"-","blind":"-"},"plain3":{"hand":"-","blind":"-"},"plain4":{"hand":"LOW","blind":"LOW"}},
