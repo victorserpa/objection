@@ -287,6 +287,14 @@ has "$out" '`init_rows(buf, -2);` is added to agg_rows_one, agg_rows_two. Withou
 grep -q '^agg.c:[0-9]*  agg_rows_three$' "$out" || { echo "FAIL: a sibling without the line was not listed"; failures=$((failures + 1)); }
 hasnt "$out" "agg_rows_four"
 hasnt "$out" "  other_thing"
+# A line in an indented method is not given to the function above the
+# class, and test functions are not a family.
+{ printf 'def load_row_one(x):\n    return x\n\n\nclass A:\n    def run(self):\n        pass\n\n\ndef load_row_two(x):\n    return x\n\n\nclass B:\n    def run(self):\n        pass\n\n\ndef load_row_three(x):\n    return x\n\n\ndef test_user_create():\n    pass\n\n\ndef test_user_delete():\n    pass\n\n\ndef test_user_list():\n    pass\n'; } >m.py
+git add . && gitc commit -q -m py
+sed -e 's/^        pass$/        self.setup_cache(42)\n        pass/' -e 's/^    pass$/    setup_db_fixture(1)\n    pass/' m.py >p.tmp && mv p.tmp m.py
+git add . && gitc commit -q -m pychange
+out=$(bash "$BRIEF" HEAD~1)
+hasnt "$out" "## A line the diff adds to several functions"
 printf 'pad\n' >>agg.c && git add . && gitc commit -q -m pad
 awk '{print} /^agg_rows_three\(int \*buf\)$/{getline; print; print "  init_rows(buf, -3);"}' agg.c >a.tmp && mv a.tmp agg.c
 git add . && gitc commit -q -m one

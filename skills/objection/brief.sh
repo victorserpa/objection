@@ -417,9 +417,10 @@ process.stdin.setEncoding("utf8").on("data", (d) => (diff += d)).on("end", () =>
 # outside the diff (eval/real: code_saturne-0bc2a3a, an initialization
 # moved from _coarse_init into the _automatic_aggregation_* functions
 # but not _automatic_aggregation_fc; no run found it). A function is the
-# nearest definition line above, at column 0, in the file at HEAD: C, Go,
-# Rust and top-level Python and JavaScript; an indented method gives no
-# name, so its lines are not grouped. Capped: 3 lines, 8 functions each.
+# definition line at column 0 above it, in the file at HEAD: C, Go, Rust
+# and top-level Python and JavaScript functions. A line in an indented
+# method, a test function or a return is not grouped. Capped: 3 lines,
+# 8 functions each.
 same_line=$(printf '%s\n' "$diff" | node -e '
 const { execFileSync } = require("child_process");
 let diff = "";
@@ -431,6 +432,8 @@ process.stdin.setEncoding("utf8").on("data", (d) => (diff += d)).on("end", () =>
   // "foo(const x *f,", "func (r *T) Foo(", "def foo(", "fn foo<T>(".
   const defName = (l) => {
     if (!/^[A-Za-z_$]/.test(l) || /;\s*$/.test(l) || /^(if|for|while|switch|return|else|case|do)\b/.test(l)) return null;
+    // "x = foo(1)" calls foo, it does not define it.
+    if (/^[\w$.\s]*[^=!<>]=[^=]/.test(l.split("(")[0] + "(")) return null;
     for (const m of l.matchAll(/([A-Za-z_$][\w$]*)\s*(<[^()]*>)?\s*\(/g)) if (!kw.has(m[1])) return m[1];
     return null;
   };
@@ -456,7 +459,7 @@ process.stdin.setEncoding("utf8").on("data", (d) => (diff += d)).on("end", () =>
       const t = norm(l.slice(1));
       // A line worth matching: long enough to be one step, not a comment
       // or a bare brace, keyword or return.
-      if (t.length >= 12 && !comment.test(t) && /[A-Za-z_$][\w$]*\s*[(=\[.]|[(=]/.test(t)) added[file].push([at, t]);
+      if (t.length >= 12 && !comment.test(t) && !/^return\b/.test(t) && /[A-Za-z_$][\w$]*\s*[(=\[.]|[(=]/.test(t)) added[file].push([at, t]);
       at++;
     } else if (!l.startsWith("-") && !l.startsWith("\\")) at++;
   }
@@ -468,7 +471,19 @@ process.stdin.setEncoding("utf8").on("data", (d) => (diff += d)).on("end", () =>
     const defs = [];
     src.forEach((l, k) => { const n = defName(l); if (n) defs.push([k + 1, n]); });
     if (defs.length < 3) continue;
-    const owner = (n) => { let d = null; for (const x of defs) { if (x[0] > n) break; d = x; } return d; };
+    // The definition a line is in: the first line above it at column 0
+    // (a brace, a directive or a comment aside) must be a definition. A
+    // class, an impl or a statement there means the line is in a method
+    // or at top level, and it is not grouped.
+    const defAt = new Map(defs);
+    const owner = (n) => {
+      for (let k = n - 1; k >= 1; k--) {
+        const l = src[k - 1];
+        if (!/^\S/.test(l) || /^([{}#]|\/\/|\/\*|\*)/.test(l)) continue;
+        return defAt.has(k) ? [k, defAt.get(k)] : null;
+      }
+      return null;
+    };
     const groups = new Map();
     for (const [n, t] of lines) {
       const d = owner(n);
@@ -483,7 +498,8 @@ process.stdin.setEncoding("utf8").on("data", (d) => (diff += d)).on("end", () =>
       const ws = [...fns].map(words);
       let k = 0;
       while (ws.every((w) => k < w.length - 1 && w[k] === ws[0][k])) k++;
-      if (k < 2) continue;
+      // Test functions share their leading words and a setup line by habit.
+      if (k < 2 || /^test/.test(ws[0][0])) continue;
       const pre = ws[0].slice(0, k).join("_");
       const body = (i) => src.slice(defs[i][0] - 1, i + 1 < defs.length ? defs[i + 1][0] - 1 : src.length).map(norm);
       const seen = new Set(), missing = [];
