@@ -100,4 +100,9 @@ grader; the answers are kept so anyone can grade them again.
 
 The patterns of six cases were narrowed after the review of this change
 (identifiers any finding on the file would use, such as `EventThread`
-or `shorten_fnames`); the automatic count did not move (39 and 21).
+or `shorten_fnames`). The patterns only drive the automatic count; the
+hand count reads every row and does not use them, so 38 and 24 do not
+change, and nothing in objection changed between the runs and this
+file. The automatic count stayed at 39 and 21; one tailscale catch (a
+hang, said without "copy" or "direction") moved from `(line+words)` to
+`(line only)`, which is why 8 are listed above.
