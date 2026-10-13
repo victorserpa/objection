@@ -130,8 +130,9 @@ catches a row that cites them and misses one that does not.
 ## Real bugs, replayed
 
 Planted bugs in small files are the easy case. [`eval/real/`](../eval/real)
-replays 39 **real** regressions from public repositories (nine first,
-fifteen more, then fifteen fresh ones below): commits that
+replays 47 **real** regressions from public repositories (nine first,
+fifteen more, fifteen fresh ones and eight in Python, Rust and
+TypeScript below): commits that
 introduced a defect a later commit fixed, naming the culprit in its
 message. CPython (twice, Python and C), Redis, Rails, Django, Go, Vue,
 ESLint and curl. The code is not stored here (licenses vary):
@@ -188,6 +189,13 @@ hand-graded ([results](../eval/results/2026-10-13-fresh-real-bugs.md)):
 
 The gap held (14 runs, against 15 on the tuned fifteen that week), and
 again it is mostly severity. Three of the fifteen nobody found.
+
+Eight more in Python, Rust and TypeScript, the languages those fifteen
+lacked, measured the same way before any change for them
+([results](../eval/results/2026-10-13-python-rust-ts.md)): objection
+found 16 of 32 runs and the plain prompt 8 (at the right severity, 9
+against 4). Harder for both, and objection under-rated most of what it
+found.
 
 ### Fifteen more, and the first nine overstated it
 

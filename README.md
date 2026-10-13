@@ -108,7 +108,9 @@ never by the plain prompt), with false alarms on 2 of 36 clean reviews
 tuning ([results](eval/results/2026-10-13-fresh-real-bugs.md)): 63%
 against 40% (58% against 38% if one case counts only the first of the
 two defects its fix repaired), graded by hand by the session that
-tuned it. 39 real bugs
+tuned it and again blind by another model; on 8 more in Python, Rust
+and TypeScript, found in half the runs against a quarter
+([results](eval/results/2026-10-13-python-rust-ts.md)). 47 real bugs
 are a small sample, and no number here says it catches everything. Scoring, every case and the history: [docs/eval.md](docs/eval.md).
 
 ## How it works

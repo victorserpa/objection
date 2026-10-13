@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Eight more real bugs in the eval, in the languages the fresh fifteen
+  lacked (Python, Rust, TypeScript), measured before any change for
+  them: objection found 16 of 32 runs and the plain prompt 8, at the
+  right severity 9 against 4, hand-graded and confirmed blind (63 of 64
+  agree). objection under-rated most of what it found here.
 - The brief lists, when the diff adds the same line to several functions
   of one family (names with the same leading words), the functions of
   that family in the same file that do not have it. On a real
