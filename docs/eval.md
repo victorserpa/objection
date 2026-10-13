@@ -228,6 +228,14 @@ then took it to 52 of 60 (Prometheus's storage path, found in no run
 before; measured with a broader first version, and again, narrowed, on
 the cases where the section appears). Details in the [results](../eval/results/2026-10-01-real-bugs.md).
 
+A fixture keeps only the files the culprit touched. Rebuilt as full
+repositories, eight of the missed or under-rated cases gained nothing:
+the "Definitions the diff calls" section filled up with generic names
+(`cwd`, `unwrap`, `last`). With the key definition placed by hand,
+fish-shell reached HIGH in 3 of 4 runs, but slint and neovim stayed at
+0. The section now puts generic names last, matches Rust macros and
+ranks specific names first ([results](../eval/results/2026-10-13-outside-diff.md)).
+
 ## Track record
 
 objection reviews its own pull requests, and every record is public in

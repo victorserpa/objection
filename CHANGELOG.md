@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased
+
+- "Definitions the diff calls" ranks snake_case and camelCase names
+  first, then plain bare calls, then methods, and names every codebase
+  calls (`unwrap`, `clear`, `cwd`, logging) last; it matches Rust macro
+  calls (`name!(`, `name!{`) against `macro_rules!` and skips test
+  functions unless the change is to tests. On full repositories it used
+  to show `last`, `stdin` or `unwrap` and miss the definition the bug
+  turned on.
+- Measured: full-repository context instead of the fixture's touched
+  files gained nothing on eight missed or under-rated real bugs; the
+  right definition placed by hand helped one of three. Results in
+  eval/results.
+
 ## 0.24.4 (2026-10-13)
 
 - The same-line section no longer treats a column-0 `try:`, `else:`,
