@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Fifteen fresh real regressions in the eval (2026-07 to 2026-09, from
+  repositories it had not used), measured after 0.24.2 shipped and not
+  used for tuning: 38 of 60 at the right severity against 24 for the
+  plain prompt, same day, same model, hand-graded. The gap seen on the
+  cases the brief was tuned on held.
 - The eval scorer says how a catch was read: `(line+words)`, `(words)`
   or `(line only)`, and a run lists how many catches came from a bug
   line alone, the ones to grade by hand. Rescored on every answer saved

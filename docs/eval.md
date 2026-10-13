@@ -130,8 +130,8 @@ catches a row that cites them and misses one that does not.
 ## Real bugs, replayed
 
 Planted bugs in small files are the easy case. [`eval/real/`](../eval/real)
-replays 24 **real** regressions from public repositories (nine first,
-fifteen more below): commits that
+replays 39 **real** regressions from public repositories (nine first,
+fifteen more, then fifteen fresh ones below): commits that
 introduced a defect a later commit fixed, naming the culprit in its
 message. CPython (twice, Python and C), Redis, Rails, Django, Go, Vue,
 ESLint and curl. The code is not stored here (licenses vary):
@@ -170,6 +170,24 @@ calling a model, so a scoring fix is applied to the runs already paid for. A cat
 read as `(line+words)`, `(words)` or `(line only)`; the last cites a
 bug line without saying the bug, and may be about another defect on
 that line, so each run lists how many to grade by hand.
+
+### Fifteen fresh ones, not used for tuning
+
+The changes after the first 24 were each kept because they did better on
+the same fifteen cases, so those numbers may be tuned to them. Fifteen
+regressions added after 0.24.2 shipped, from repositories the eval had
+not used (2026-10-13; rcc, V8, MPD, code_saturne, Cilium, Neovim,
+Kotlin, Doctrine ORM, Quarkus, BasicSync, NodeBB, a Luanti game,
+NuttX apps, Tailscale, Odoo), same day, same model, four runs per side,
+hand-graded ([results](../eval/results/2026-10-13-fresh-real-bugs.md)):
+
+| | right severity | found at any severity |
+|---|---|---|
+| objection 0.24.2 | 38 of 60 (63%) | 43 of 60 (72%) |
+| plain prompt, same model | 24 of 60 (40%) | 37 of 60 (62%) |
+
+The gap held (14 runs, against 15 on the tuned fifteen that week), and
+again it is mostly severity. Three of the fifteen nobody found.
 
 ### Fifteen more, and the first nine overstated it
 

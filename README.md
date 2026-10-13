@@ -104,7 +104,9 @@ measured the same day on the same model (`claude-sonnet-5-5`), objection
 rated 80% of the runs right against 62% for a plain review prompt,
 mostly on the severe ones (a buffer overflow rated BLOCKER every time,
 never by the plain prompt), with false alarms on 2 of 36 clean reviews
-(the plain prompt: 2 of 18). 24 real bugs
+(the plain prompt: 2 of 18). On 15 fresh regressions not used for
+tuning ([results](eval/results/2026-10-13-fresh-real-bugs.md)): 63%
+against 40%. 39 real bugs
 are a small sample, and no number here says it catches everything. Scoring, every case and the history: [docs/eval.md](docs/eval.md).
 
 ## How it works
