@@ -295,6 +295,18 @@ sed -e 's/^        pass$/        self.setup_cache(42)\n        pass/' -e 's/^   
 git add . && gitc commit -q -m pychange
 out=$(bash "$BRIEF" HEAD~1)
 hasnt "$out" "## A line the diff adds to several functions"
+# A Go label at column 0 is inside its function, and a return line is
+# not one to match.
+{ for fn in FooBarOpen FooBarRead FooBarClose; do printf 'func %s(ctx int) error {\n\tstep(ctx)\ncleanup:\n\tdone(ctx)\n\treturn nil\n}\n\n' "$fn"; done; } >g.go
+git add . && gitc commit -q -m go
+sed -e '/^func FooBarOpen/,/^}/s/^\tdone(ctx)$/\trelease(ctx, buffer)\n\tdone(ctx)/' -e '/^func FooBarRead/,/^}/s/^\tdone(ctx)$/\trelease(ctx, buffer)\n\tdone(ctx)/' g.go >g.tmp && mv g.tmp g.go
+git add . && gitc commit -q -m gochange
+out=$(bash "$BRIEF" HEAD~1)
+grep -q '^g.go:[0-9]*  FooBarClose$' "$out" || { echo "FAIL: a line after a Go label was not grouped"; failures=$((failures + 1)); }
+sed -e '/^func FooBarOpen/,/^}/s/^\treturn nil$/\treturn wrapErr(ctx, nil)/' -e '/^func FooBarRead/,/^}/s/^\treturn nil$/\treturn wrapErr(ctx, nil)/' g.go >g.tmp && mv g.tmp g.go
+git add . && gitc commit -q -m goreturn
+out=$(bash "$BRIEF" HEAD~1)
+hasnt "$out" "## A line the diff adds to several functions"
 printf 'pad\n' >>agg.c && git add . && gitc commit -q -m pad
 awk '{print} /^agg_rows_three\(int \*buf\)$/{getline; print; print "  init_rows(buf, -3);"}' agg.c >a.tmp && mv a.tmp agg.c
 git add . && gitc commit -q -m one

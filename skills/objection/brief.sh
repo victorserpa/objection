@@ -418,7 +418,8 @@ process.stdin.setEncoding("utf8").on("data", (d) => (diff += d)).on("end", () =>
 # moved from _coarse_init into the _automatic_aggregation_* functions
 # but not _automatic_aggregation_fc; no run found it). A function is the
 # definition line at column 0 above it, in the file at HEAD: C, Go, Rust
-# and top-level Python and JavaScript functions. A line in an indented
+# and top-level Python and JavaScript function declarations (not one
+# assigned, "exports.f = function f("). A line in an indented
 # method, a test function or a return is not grouped. Capped: 3 lines,
 # 8 functions each.
 same_line=$(printf '%s\n' "$diff" | node -e '
@@ -479,7 +480,8 @@ process.stdin.setEncoding("utf8").on("data", (d) => (diff += d)).on("end", () =>
     const owner = (n) => {
       for (let k = n - 1; k >= 1; k--) {
         const l = src[k - 1];
-        if (!/^\S/.test(l) || /^([{}#]|\/\/|\/\*|\*)/.test(l)) continue;
+        // A label ("cleanup:", outdented by gofmt) is inside the function.
+        if (!/^\S/.test(l) || /^([{}#]|\/\/|\/\*|\*)/.test(l) || /^[A-Za-z_]\w*:\s*$/.test(l)) continue;
         return defAt.has(k) ? [k, defAt.get(k)] : null;
       }
       return null;
@@ -499,7 +501,7 @@ process.stdin.setEncoding("utf8").on("data", (d) => (diff += d)).on("end", () =>
       let k = 0;
       while (ws.every((w) => k < w.length - 1 && w[k] === ws[0][k])) k++;
       // Test functions share their leading words and a setup line by habit.
-      if (k < 2 || /^test/.test(ws[0][0])) continue;
+      if (k < 2 || ws[0][0] === "test") continue;
       const pre = ws[0].slice(0, k).join("_");
       const body = (i) => src.slice(defs[i][0] - 1, i + 1 < defs.length ? defs[i + 1][0] - 1 : src.length).map(norm);
       const seen = new Set(), missing = [];
