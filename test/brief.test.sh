@@ -314,6 +314,25 @@ out=$(bash "$BRIEF" HEAD~1)
 hasnt "$out" "## A line the diff adds to several functions"
 cd "$T" || exit 1
 
+# A line in a top-level "try:" block is not given to the def above it,
+# and the list of functions without the line is capped at 8.
+S2="$T/same2"
+git init -q "$S2" && cd "$S2" || exit 1
+printf '{"bases":["main"]}\n' >.objection.json
+{ for fn in sync_job_one sync_job_two sync_job_three; do printf 'def %s(x):\n    return x\n\n\ntry:\n    pass\nexcept Exception:\n    pass\n\n\n' "$fn"; done; } >t.py
+git add . && gitc commit -q -m base
+awk 'BEGIN{n=0} {print} /^try:$/{n++; if (n<=2) print "    register_hook(handler, 42)"}' t.py >t.tmp && mv t.tmp t.py
+git add . && gitc commit -q -m trychange
+out=$(bash "$BRIEF" HEAD~1)
+hasnt "$out" "## A line the diff adds to several functions"
+{ for k in $(seq 1 12); do printf 'static void\ncap_fam_f%s(int *b)\n{\n  step(b);\n}\n\n' "$k"; done; } >cap.c
+git add . && gitc commit -q -m cap
+awk '{print} /^cap_fam_f(1|2)\(int \*b\)$/{getline; print; print "  init_cache(b, 7);"}' cap.c >c.tmp && mv c.tmp cap.c
+git add . && gitc commit -q -m capchange
+out=$(bash "$BRIEF" HEAD~1)
+has "$out" "(and 2 more)"
+cd "$T" || exit 1
+
 # A file name with an accent still matches the invariant's paths.
 U="$T/utf"
 git init -q "$U" && cd "$U" || exit 1

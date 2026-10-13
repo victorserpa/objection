@@ -480,8 +480,10 @@ process.stdin.setEncoding("utf8").on("data", (d) => (diff += d)).on("end", () =>
     const owner = (n) => {
       for (let k = n - 1; k >= 1; k--) {
         const l = src[k - 1];
-        // A label ("cleanup:", outdented by gofmt) is inside the function.
-        if (!/^\S/.test(l) || /^([{}#]|\/\/|\/\*|\*)/.test(l) || /^[A-Za-z_]\w*:\s*$/.test(l)) continue;
+        // A label ("cleanup:", outdented by gofmt) is inside the function;
+        // A Python "try:" or a C++ "public:" at column 0 is not one.
+        if (!/^\S/.test(l) || /^([{}#]|\/\/|\/\*|\*)/.test(l)) continue;
+        if (/^[A-Za-z_]\w*:\s*$/.test(l) && !/^(try|else|finally|except|public|private|protected|default)\s*:/.test(l)) continue;
         return defAt.has(k) ? [k, defAt.get(k)] : null;
       }
       return null;

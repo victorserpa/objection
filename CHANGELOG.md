@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- The same-line section no longer treats a column-0 `try:`, `else:`,
+  `finally:`, `except:` or a C++ access label as a label inside a
+  function, so a line in a top-level Python block is not given to the
+  def above it; its 8-function cap is tested.
+- Measured and not shipped: an accuser role that asks to rate the
+  consequence, not the mechanism, did not raise the severity of the
+  catches objection under-rates (22 of 40 for both, same day), and
+  added no false alarm. Results in eval/results.
 - Eight more real bugs in the eval, in the languages the fresh fifteen
   lacked (Python, Rust, TypeScript), measured before any change for
   them: objection found 16 of 32 runs and the plain prompt 8, at the

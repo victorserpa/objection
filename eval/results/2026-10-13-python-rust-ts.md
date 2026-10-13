@@ -69,3 +69,23 @@ those three cases are exactly the ones the hand count has.
 Eight cases, four runs, one model. Nothing in objection changed for
 these cases; only the scorer's patterns did, after the runs. The expected severities were set by
 a model and checked by hand.
+
+## Severity: a role change that did not help
+
+Of the 59 hand-graded catches objection made on the 2026-10-13 sets, 12
+were rated below the expected severity (the plain prompt: 17 of 45),
+most on hls.js and fish-shell. The rows describe the mechanism and stop
+before the consequence: "the output differs from before" for zeros that
+were NAL payload, "garbled characters if the formatter does not convert
+a `char`" for what was a crash.
+
+A variant of the accuser role asked it to rate the consequence, not the
+mechanism, and to rate what the visible code makes plausible when the
+outcome depends on unseen code. Same day, same model, 4 runs each,
+interleaved, against main's role: on 10 real cases (7 it had
+under-rated, 3 it had rated right) 22 of 40 runs at the right severity
+for both; on the 36 planted cases 144 of 144 against 143 of 144 (one
+false alarm on main's side). hls.js and fish-shell did not move. The
+role was not changed: what is missing is what the code outside the diff
+does (fish's formatter given a `char`, whether trailing zeros are
+data), not the instruction.
