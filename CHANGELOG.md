@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.24.4 (2026-10-13)
 
 - The same-line section no longer treats a column-0 `try:`, `else:`,
   `finally:`, `except:` or a C++ access label as a label inside a
