@@ -166,7 +166,10 @@ first scorer missed citations written as a range (`cookie.c:1248-1298`)
 or as an estimate (`linter.js:~174`, how a reviewer without line numbers
 cites), which undercounted both sides. `EVAL_KEEP=<dir>` saves every
 answer and `EVAL_RESCORE=<dir>` scores saved answers again without
-calling a model, so a scoring fix is applied to the runs already paid for.
+calling a model, so a scoring fix is applied to the runs already paid for. A catch is
+read as `(line+words)`, `(words)` or `(line only)`; the last cites a
+bug line without saying the bug, and may be about another defect on
+that line, so each run lists how many to grade by hand.
 
 ### Fifteen more, and the first nine overstated it
 

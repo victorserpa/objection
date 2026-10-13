@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+- The eval scorer says how a catch was read: `(line+words)`, `(words)`
+  or `(line only)`, and a run lists how many catches came from a bug
+  line alone, the ones to grade by hand. Rescored on every answer saved
+  since 2026-10-01, they are exactly the two cases the hand count had
+  overturned (netty-3c06dd6, nushell-0a0475e). Two real-bug patterns
+  were corrected: nushell-d271a05 missed catches phrased "starting with
+  `.`", and vite-1f068fc credited a run for a `ReferenceError` about
+  another variable.
+
 ## 0.24.2 (2026-10-12)
 
 - The brief lists the other uses, in the changed files, of a code name

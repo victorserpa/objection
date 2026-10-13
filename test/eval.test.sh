@@ -25,9 +25,17 @@ row='| HIGH | BUG | src/export.js:%s | %s | read | %s |'
 [ "$(score missing-cleanup "$(printf "$row" 11 'x' 'p')")" = CAUGHT ] || fail "a cited bug line was not caught"
 [ "$(score missing-cleanup "$(printf "$row" 40 'the temp dir leaks on retry' 'p')")" = CAUGHT ] || fail "the bug in words was not caught"
 # Which evidence counted: the line when cited, else the words.
-how() { FAKE_ROW="$2" bash "$ROOT/eval/run.sh" "$1" 2>/dev/null | awk -v n="$1" '$1 == n' | grep -oE '\((line|words)\)'; }
-[ "$(how missing-cleanup "$(printf "$row" 11 'x' 'p')")" = "(line)" ] || fail "a cited line was not reported as (line)"
+how() { FAKE_ROW="$2" bash "$ROOT/eval/run.sh" "$1" 2>/dev/null | awk -v n="$1" '$1 == n' | grep -oE '\((line only|line\+words|words)\)'; }
+[ "$(how missing-cleanup "$(printf "$row" 11 'the temp dir leaks on retry' 'p')")" = "(line+words)" ] || fail "a cited line said in words was not reported as (line+words)"
+[ "$(how missing-cleanup "$(printf "$row" 11 'x' 'p')")" = "(line only)" ] || fail "a cited line alone was not reported as (line only)"
 [ "$(how missing-cleanup "$(printf "$row" 40 'the temp dir leaks on retry' 'p')")" = "(words)" ] || fail "a catch in words was not reported as (words)"
+# A row that says the bug wins over one that only cites its line, and a
+# catch by a line alone is listed to grade by hand.
+two="$(printf "$row" 11 'x' 'p')
+$(printf "$row" 40 'the temp dir leaks on retry' 'p')"
+[ "$(how missing-cleanup "$two")" = "(words)" ] || fail "a line-only row won over one that says the bug"
+FAKE_ROW="$(printf "$row" 11 'x' 'p')" bash "$ROOT/eval/run.sh" missing-cleanup 2>/dev/null | grep -q '^check by hand: 1 catch' || fail "a line-only catch was not listed to check by hand"
+FAKE_ROW="$(printf "$row" 11 'the temp dir leaks on retry' 'p')" bash "$ROOT/eval/run.sh" missing-cleanup 2>/dev/null | grep -q '^check by hand' && fail "a catch said in words was listed to check by hand"
 # The file named in the defect cell too: the file:line cell still counts.
 [ "$(score missing-cleanup '| HIGH | BUG | the temp dir in src/export.js leaks | src/export.js:11 | read | p |')" = CAUGHT ] || fail "a file named twice was not caught"
 # An unrelated finding in the same file is not a catch, even when a

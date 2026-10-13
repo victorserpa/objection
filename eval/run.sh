@@ -39,6 +39,7 @@ T=$(mktemp -d)
 trap 'rm -rf "$T"' EXIT
 pass=0
 total=0
+lineonly=0
 printf '%-18s %-10s %-22s %s\n' fixture expected result "cost / note"
 for name in "${names[@]}"; do
   f="$fixtures/$name"
@@ -133,18 +134,25 @@ for name in "${names[@]}"; do
     });
     // The file:line cell cites a bug line, or the defect cell next to it
     // says the bug in words: a keyword elsewhere in the row does not count.
-    // "line" when it cites a bug line, "words" when only the defect cell
-    // says it: a catch by line is the stronger evidence, so it wins.
+    // "line+words" when it does both, "words" when only the defect cell
+    // says it, "line only" when it cites a bug line but its defect cell
+    // does not say the bug. A line alone is the weakest: on the
+    // 2026-10-01 real bugs, rows about another defect on a bug line
+    // (netty-3c06dd6, nushell-0a0475e) were read as catches. It still
+    // counts, and the run says how many to grade by hand.
     const how = (r) => {
       const cells = r.text.split("|");
       // The file:line cell, else the first cell that names the file.
       let i = cells.findIndex((c) => refs(c).some((m) => m[2]));
       if (i < 0) i = cells.findIndex(names);
       if (i < 0) return "";
-      return cites(cells[i]) ? "line" : re.test(cells[i + 1] || "") ? "words" : "";
+      const said = re.test(cells[i + 1] || "");
+      return cites(cells[i]) ? (said ? "line+words" : "line only") : said ? "words" : "";
     };
-    const strong = rows.filter((r) => rank[r.sev] >= rank[e.severity] && how(r));
-    const hit = strong.find((r) => how(r) === "line") || strong[0];
+    const order = ["line+words", "words", "line only"];
+    const strong = rows.filter((r) => rank[r.sev] >= rank[e.severity] && how(r))
+      .sort((a, b) => order.indexOf(how(a)) - order.indexOf(how(b)));
+    const hit = strong[0];
     const near = rows.find(how);
     console.log(hit ? `CAUGHT ${hit.sev} (${how(hit)})` : near ? `LOW-RATED ${near.sev}` : "MISSED");
   ' "$f/expect.json" "$T/$name.out" "$rc")
@@ -192,6 +200,7 @@ for name in "${names[@]}"; do
       ;;
   esac
   case "$verdict" in CAUGHT* | PASS) pass=$((pass + 1)) ;; esac
+  case "$verdict" in *"(line only)"*) lineonly=$((lineonly + 1)) ;; esac
   printf '%-18s %-10s %-22s %s%s\n' "$name" "$exp" "$verdict" "${cost:-?}" "${defense:+; $defense}"
   [ -z "${EVAL_KEEP:-}" ] || { cp "$T/$name.out" "$EVAL_KEEP/$name.out"; [ ! -f "$T/$name.defense" ] || cp "$T/$name.defense" "$EVAL_KEEP/$name.defense"; }
 done
@@ -206,6 +215,9 @@ esac
 # a new model without notice, and two runs compare only on the same one.
 models=$(cat "$T"/*.err 2>/dev/null | sed -n 's/^objection: model //p' | sort -u | paste -sd, -)
 echo "runner: $who${models:+ ($models)}; $pass of $total as expected"
+# Graded by hand first: a catch by a line alone may be about another
+# defect on that line.
+[ "$lineonly" = 0 ] || echo "check by hand: $lineonly catch(es) by a bug line alone, \"(line only)\" above"
 # Real bugs (EVAL_FIXTURES) are graded by hand before a number is quoted:
 # a row that cites a bug line counts even when it describes another
 # defect on that line, and the 2026-10-01 run read 6 of 60 too high.
